@@ -1,2 +1,2 @@
-Pythonified Group-Code
+Pythonified group-code
 ----------------------
