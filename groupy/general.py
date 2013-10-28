@@ -1,8 +1,5 @@
 import numpy as np
 
-from groupy.monolayers import *
-from groupy.mdio import *
-from groupy.inertia import *
 
 # --- general handy stuff ---
 def find_nearest(array, target):
@@ -13,15 +10,13 @@ def find_nearest(array, target):
     return idx, array[idx]
 
 
-def calc_com(xyz, mass=[]):
+def calc_com(xyz, mass):
     """Calculate center of mass of a set of points
     """
+    assert xyz.shape[0] == mass.shape[0]
+
     cum_mass = 0
     com = np.array([0., 0., 0.])
-    if mass.size:
-        assert len(xyz) == len(mass)
-    else:
-        mass = np.ones(xyz.shape)
     for i, coord in enumerate(xyz):
         com += coord * mass[i]
         cum_mass += mass[i]
