@@ -22,5 +22,3 @@ def calc_com(xyz, mass):
         cum_mass += mass[i]
     com /= cum_mass
     return com
-
-

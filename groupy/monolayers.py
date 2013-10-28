@@ -172,7 +172,7 @@ def calc_res_time(file_name,
 
     # non-linear fit
     A0 = frac_remaining.max()
-    K0 = -y.max()/t.max()
+    K0 = -y.max() / t.max()
     C0 = np.mean(y[int(0.75 * len(y)):])
 
     guesses = [A0, K0, C0]
@@ -250,4 +250,3 @@ def find_cutoff(film, heights, plot=False):
 
         fig.savefig(film + '_film_thickness.pdf', bbox_inches='tight')
     return film_bounds
-

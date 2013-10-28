@@ -1,6 +1,7 @@
 import numpy as np
 import pdb
 
+
 def read_frame_lammpstrj(trj, read_velocities=False):
     """Load a frame from a lammps dump file
 

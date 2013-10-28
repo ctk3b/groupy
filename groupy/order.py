@@ -32,7 +32,7 @@ def calc_inertia_tensor(xyz, masses=None):
     return I
 
 
-def calc_vector(I):
+def calc_director(I):
     """Calculates characteristic vector describing, e.g. a polymer
 
     Args:
