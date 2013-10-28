@@ -1,5 +1,4 @@
 import numpy as np
-import time
 import matplotlib.pyplot as plt
 import pdb
 
@@ -15,12 +14,11 @@ for j in range(100):
 
     for i, molecule in enumerate(np.split(atoms, 100)):
         I = calc_inertia_tensor(molecule)
-        director = calc_vector(I)
+        director = calc_director(I)
         directors[i] = director
 
     Q = calc_Q_tensor(directors)
     S2, director = calc_S2(Q)
-    #print S2
     all_S2.append(S2)
 
 plt.hist(all_S2)
