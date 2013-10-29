@@ -3,7 +3,7 @@ from groupy.monolayers import *
 
 
 # --- user specifications ---
-file_name = 'data_files/mpc_0.2_35.lammpstrj'
+file_name = 'example_inputs/mpc_0.2_35.lammpstrj'
 n_planes = 100  # number of flux planes
 
 # --- system info ---
@@ -54,6 +54,6 @@ fig = plt.figure()
 plt.plot(avg_fluxes, planes)
 plt.xlabel(ur'Flux (molecules/nm$\mathregular{^2\cdot}$ ps)')
 plt.ylabel(ur'z (\u00c5)')
-fig_name = 'flux_vs_z.pdf'
+fig_name = 'example_outputs/flux_vs_z.pdf'
 fig.savefig(fig_name, bbox_inches='tight')
 print 'Saved ' + fig_name

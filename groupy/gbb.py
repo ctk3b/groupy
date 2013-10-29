@@ -35,7 +35,6 @@ class Gbb():
         self.charges = None
         self.com = None
 
-
     # --- calculable properties ---
     def calc_com(self):
         """Calculate center of mass of a set of points
@@ -49,7 +48,6 @@ class Gbb():
         com /= cum_mass
         self.com = com
 
-
     def calc_inertia_tensor(self):
         """Calculates the moment of inertia tensor of the gbb
 
@@ -57,22 +55,21 @@ class Gbb():
             I (np.ndarray): moment of inertia tensor
         """
         assert self.xyz.shape[0] == self.masses.shape[0]
-        I = np.zeros(shape=(3,3))
+        I = np.zeros(shape=(3, 3))
         self.calc_com()
         for i, coord0 in enumerate(self.xyz):
             mass = self.masses[i]
             coord = coord0 - self.com
-            I[0,0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
-            I[1,1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
-            I[2,2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
-            I[0,1] -= mass * coord[0] * coord[1]
-            I[0,2] -= mass * coord[0] * coord[2]
-            I[1,2] -= mass * coord[1] * coord[2]
-        I[1,0] = I[0,1]
-        I[2,0] = I[0,2]
-        I[2,1] = I[1,2]
+            I[0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
+            I[1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
+            I[2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
+            I[0, 1] -= mass * coord[0] * coord[1]
+            I[0, 2] -= mass * coord[0] * coord[2]
+            I[1, 2] -= mass * coord[1] * coord[2]
+        I[1, 0] = I[0, 1]
+        I[2, 0] = I[0, 2]
+        I[2, 1] = I[1, 2]
         return I
-
 
     def calc_r_gyr():
         pass
@@ -80,15 +77,17 @@ class Gbb():
     # --- deformations ---
     def translate():
         pass
+
     def rotate():
         pass
+
     def scale():
         pass
 
     def unwrap(self, box, dim=[True, True, True]):
         """Unwrap periodic boundary conditons of an object
 
-        Requires that object being unwrapped does not span more than half the 
+        Requires that object being unwrapped does not span more than half the
         box length.
         """
         for i, atom in enumerate(self.xyz):
@@ -98,7 +97,6 @@ class Gbb():
                         dr = self.xyz[i, k] - self.xyz[0, k]
                         box_length = np.diff(box[k])
                         self.xyz[i, k] -= box_length * anint(dr / box_length)
-
 
     def wrap(self, box, dim=[True, True, True]):
         """Wrap coordinates for PBC
@@ -111,7 +109,6 @@ class Gbb():
                         self.xyz[i, k] = box[k, 1] - abs(box[k, 0] - c)
                     elif c > box[k, 1]:
                         self.xyz[i, k] = box[k, 0] + abs(c - box[k, 1])
-
 
     def mirror(self, box, dim=[False, False, True], d=0.0, verbose=False):
         """Creates a mirror image of gbb in a given direction
@@ -128,17 +125,14 @@ class Gbb():
         Args:
             d (float): desired separation distance
         """
-
         # find max/min z
         z_max = self.xyz[:, 2].max()
         z_min = self.xyz[:, 2].min()
-
         # adjust box size
         box[2] = [z_min - 1, z_max + abs(z_max - z_min) + d + 1]
 
         # duplicate types entries
         self.types = np.hstack((self.types, self.types))
-
         # make atom copies
         new_xyz = np.empty_like(self.xyz)
         for i, coord in enumerate(new_xyz):
@@ -187,11 +181,9 @@ class Gbb():
     def load_mass(self, file_name):
         self.masses = np.loadtxt(file_name)
 
-
     def load_xyz(self, file_name):
         self.xyz, self.types = read_xyz(file_name)
         self.n_atoms = self.xyz.shape[0]
-
 
     def load_data(self, data_file, name='', verbose=False):
         """Reads a LAMMPS data file into a gbb object
@@ -221,11 +213,9 @@ class Gbb():
         Returns:
             box (numpy.ndarray): box dimensions
         """
-
         print 'Reading: ' + data_file
         with open(data_file, 'r') as f:
             data_lines = f.readlines()
-
 
         if name:
             self.name = name
@@ -233,7 +223,6 @@ class Gbb():
             # toss out 'data.'
             prefix = re.search(r'\..+', data_file).group().strip('.')
             self.name = prefix
-
 
         directives = re.compile(r"""
             ((?P<n_atoms>.*atoms)
@@ -292,7 +281,7 @@ class Gbb():
                     fields = data_lines.pop(i).split()
                     self.dihedrals = np.empty(shape=(float(fields[0]), 5))
 
-                elif match.group('box'): 
+                elif match.group('box'):
                     box = np.zeros(shape=(3, 2))
                     for j in range(3):
                         fields = map(float, data_lines.pop(i).split()[:2])
@@ -345,9 +334,8 @@ class Gbb():
                     data_lines.pop(i)
 
                     while i < len(data_lines) and data_lines[i].strip():
-                        fields = data_lines.pop(i).split()
-                        self.bond_types[int(fields[0])] = (float(fields[1]),
-                                                      float(fields[2]))
+                        fields = map(float, data_lines.pop(i).split())
+                        self.bond_types[int(fields[0])] = fields[1:]
 
                 elif match.group('AngleCoeffs'):
                     if verbose:
@@ -356,9 +344,8 @@ class Gbb():
                     data_lines.pop(i)
 
                     while i < len(data_lines) and data_lines[i].strip():
-                        fields = data_lines.pop(i).split()
-                        self.angle_types[int(fields[0])] = (float(fields[1]),
-                                                       float(fields[2]))
+                        fields = map(float, data_lines.pop(i).split())
+                        self.angle_types[int(fields[0])] = fields[1:]
 
                 elif match.group('DihedralCoeffs'):
                     if verbose:
@@ -367,11 +354,8 @@ class Gbb():
                     data_lines.pop(i)
 
                     while i < len(data_lines) and data_lines[i].strip():
-                        fields = data_lines.pop(i).split()
-                        self.dihedral_types[int(fields[0])] = (float(fields[1]),
-                                                          float(fields[2]),
-                                                          float(fields[3]),
-                                                          float(fields[4]))
+                        fields = map(float, data_lines.pop(i).split())
+                        self.dihedral_types[int(fields[0])] = fields[1:]
 
                 elif match.group('Bonds'):
                     if verbose:

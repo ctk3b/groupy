@@ -15,8 +15,10 @@ def anint(x):
     """
     if x >= 0.5:
         return 1.
-    else:
+    elif x < -0.5:
         return -1.
+    else:
+        return 0.
 
 
 def calc_angle(u, v, already_normed=True):

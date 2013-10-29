@@ -3,8 +3,8 @@ from groupy.visualization import *
 from groupy.gbb import *
 
 mpc = Gbb()
-mpc.load_xyz('data_files/mpc.xyz')
-mpc.load_mass('data_files/mpc_mass.txt')
+mpc.load_xyz('example_inputs/mpc.xyz')
+mpc.load_mass('example_inputs/mpc_mass.txt')
 
 I = mpc.calc_inertia_tensor()
 director = calc_director(I)

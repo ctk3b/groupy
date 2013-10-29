@@ -8,11 +8,11 @@ from groupy.gbb import *
 
 # --- user input ---
 coverage = 0.2
-file_name = 'data_files/peg6_' + str(coverage) + '.lammpstrj'
+file_name = 'example_inputs/peg6_' + str(coverage) + '.lammpstrj'
 
 peg = Gbb()
-peg.load_xyz('data_files/peg6.xyz')
-peg.load_mass('data_files/peg6_mass.txt')
+peg.load_xyz('example_inputs/peg6.xyz')
+peg.load_mass('example_inputs/peg6_mass.txt')
 
 # --- system info ---
 # atom indices of regions
@@ -49,18 +49,18 @@ with open(file_name, 'r') as trj:
         for i, xyz in enumerate(individual_chain_coords):
             temp_peg = copy.copy(peg)
             temp_peg.xyz = xyz
-            temp_peg.unwrap(box, [True, True, True])
+            temp_peg.unwrap(box)
 
             I = temp_peg.calc_inertia_tensor()
             director = calc_director(I)
+            directors[i] = director
             angle = calc_angle(director, [0, 0, 1])
             if (angle >= 90) and (angle <= 180):
                 angle -= 90
             all_angles.append(angle)
-            directors[i] = director
 
         Q = calc_Q_tensor(directors)
-        S2, _ = calc_S2(Q)
+        S2 = calc_S2(Q)
         all_S2.append(S2)
 
 print 'Average tilt angle:'
