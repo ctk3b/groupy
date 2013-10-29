@@ -107,10 +107,10 @@ class Gbb():
         for i, coords in enumerate(self.xyz):
             for k, c in enumerate(coords):  # TODO: vectorize
                 if dim[k] == True:
-                    if c < self.box[k][0]:
-                        self.xyz[i, k] = box[k][1] - abs(box[k][0] - c)
-                    elif c > self.box[j][1]:
-                        self.xyz[i, k] = box[k][0] + abs(c - box[k][1])
+                    if c < box[k, 0]:
+                        self.xyz[i, k] = box[k, 1] - abs(box[k, 0] - c)
+                    elif c > box[k, 1]:
+                        self.xyz[i, k] = box[k, 0] + abs(c - box[k, 1])
 
 
     def mirror(self, box, dim=[False, False, True], d=0.0, verbose=False):
@@ -136,49 +136,52 @@ class Gbb():
         # adjust box size
         box[2] = [z_min - 1, z_max + abs(z_max - z_min) + d + 1]
 
-        # make atom copies
-        n_atoms = len(self.atoms)
-        for i, atom in enumerate(self.atoms):
-            if i == n_atoms:  # don't copy newly flipped atoms
-                break
-            new_atom = copy.deepcopy(atom)
-            # adjust coords
-            new_atom.xyz[0] = self.box[0][0] + abs(self.box[0][1] - atom.xyz[0])
-            new_atom.xyz[1] = self.box[1][0] + abs(self.box[1][1] - atom.xyz[1])
-            new_atom.xyz[2] = z_max + d + abs(z_max - atom.xyz[2])
-            atom.ID = len(self.atoms) + 1
-            self.add_atom(new_atom)
+        # duplicate types entries
+        self.types = np.hstack((self.types, self.types))
 
+        # make atom copies
+        new_xyz = np.empty_like(self.xyz)
+        for i, coord in enumerate(new_xyz):
+            # adjust coords
+            old = self.xyz[i]
+            new_xyz[i, 0] = box[0, 0] + abs(box[0, 1] - old[0])
+            new_xyz[i, 1] = box[1, 0] + abs(box[1, 1] - old[1])
+            new_xyz[i, 2] = z_max + d + abs(z_max - old[2])
+        self.xyz = np.vstack((self.xyz, new_xyz))
+        """
         # make bond copies
-        n_bonds = len(self.bonds)
-        for i, bond in enumerate(self.bonds):
-            if i == n_bonds:
-                break
-            new_bond = [len(self.bonds) + 1, bond[1], 0, 0]
-            for j in range(2):
-                new_bond[j + 2] = bond[j + 2] + n_atoms
-            self.add_bond(new_bond)
+        if self.bonds:
+            n_bonds = len(self.bonds)
+            for i, bond in enumerate(self.bonds):
+                if i == n_bonds:
+                    break
+                new_bond = [len(self.bonds) + 1, bond[1], 0, 0]
+                for j in range(2):
+                    new_bond[j + 2] = bond[j + 2] + n_atoms
+                self.add_bond(new_bond)
 
         # make angle copies
-        n_angles = len(self.angles)
-        for i, angle in enumerate(self.angles):
-            if i == n_angles:
-                break
-            new_angle = [len(self.angles) + 1, angle[1], 0, 0, 0]
-            for j in range(3):
-                new_angle[j + 2] = angle[j + 2] + n_atoms
-            self.add_angle(new_angle)
+        if self.angles:
+            n_angles = len(self.angles)
+            for i, angle in enumerate(self.angles):
+                if i == n_angles:
+                    break
+                new_angle = [len(self.angles) + 1, angle[1], 0, 0, 0]
+                for j in range(3):
+                    new_angle[j + 2] = angle[j + 2] + n_atoms
+                self.add_angle(new_angle)
 
         # make dihedral copies
-        n_dihedrals = len(self.dihedrals)
-        for i, dihedral in enumerate(self.dihedrals):
-            if i == n_dihedrals:
-                break
-            new_dihedral = [len(self.dihedrals) + 1, dihedral[1], 0, 0, 0, 0]
-            for j in range(4):
-                new_dihedral[j + 2] = dihedral[j + 2] + n_atoms
-            self.add_dihedral(new_dihedral)
-
+        if self.dihedrals:
+            n_dihedrals = len(self.dihedrals)
+            for i, dihedral in enumerate(self.dihedrals):
+                if i == n_dihedrals:
+                    break
+                new_dihedral = [len(self.dihedrals) + 1, dihedral[1], 0, 0, 0, 0]
+                for j in range(4):
+                    new_dihedral[j + 2] = dihedral[j + 2] + n_atoms
+                self.add_dihedral(new_dihedral)
+        """
 
     # --- io ---
     def load_mass(self, file_name):
@@ -271,10 +274,11 @@ class Gbb():
 
                 elif match.group('n_atoms'):
                     fields = data_lines.pop(i).split()
-                    self.xyz = np.empty(shape=(float(fields[0]), 3))
-                    self.types = np.empty(shape=(float(fields[0])))
-                    self.masses = np.empty(shape=(float(fields[0])))
-                    self.charges = np.empty(shape=(float(fields[0])))
+                    self.n_atoms = int(fields[0])
+                    self.xyz = np.empty(shape=(self.n_atoms, 3))
+                    self.types = np.empty(shape=(self.n_atoms))
+                    self.masses = np.empty(shape=(self.n_atoms))
+                    self.charges = np.empty(shape=(self.n_atoms))
 
                 elif match.group('n_bonds'):
                     fields = data_lines.pop(i).split()
