@@ -10,15 +10,22 @@ def find_nearest(array, target):
     return idx, array[idx]
 
 
-def calc_com(xyz, mass):
-    """Calculate center of mass of a set of points
+def anint(x):
     """
-    assert xyz.shape[0] == mass.shape[0]
+    """
+    if x >= 0.5:
+        return 1.
+    elif x < -0.5:
+        return -1.
+    else:
+        return 0.
 
-    cum_mass = 0
-    com = np.array([0., 0., 0.])
-    for i, coord in enumerate(xyz):
-        com += coord * mass[i]
-        cum_mass += mass[i]
-    com /= cum_mass
-    return com
+
+def calc_angle(u, v, already_normed=True):
+    """Compute the angle between 2 vectors
+    """
+    if already_normed:
+        c = np.dot(u, v)
+    else:
+        c = np.dot(u, v) / np.linalg.norm(u) / np.linalg.norm(v)
+    return np.arccos(c) * 180.0 / np.pi

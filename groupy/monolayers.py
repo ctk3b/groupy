@@ -28,9 +28,8 @@ def calc_film_heights(file_name, system_info):
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
-                print 'Done reading ' + file_name
+                print 'Reached end of ' + file_name
                 break
-            print 'Read timestep ' + str(step)
             # temp container for z-coords of top, [0], and bottom, [1], films
             temp_heights = np.empty(shape=(2, len(system_info['botfilm'])))
             temp_heights[0] = xyz[system_info['topfilm']][:, 2]
@@ -46,7 +45,7 @@ def calc_flux(file_name,
         system_info,
         planes,
         area,
-        max_time=1):
+        max_time=np.inf):
     """Calculate fluxes of water across multiple x-y planes
 
     Args:
@@ -69,9 +68,8 @@ def calc_flux(file_name,
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
-                print 'Done reading ' + file_name
+                print 'Reached end of ' + file_name
                 break
-            print 'Read timestep ' + str(step)
 
             # select z-coords of water atoms
             water = xyz[system_info['water']][:, 2]
@@ -99,7 +97,7 @@ def calc_res_time(file_name,
         top_bounds,
         bot_bounds,
         slab,
-        max_time=50000,
+        max_time=np.inf,
         return_data=False,
         plot=False):
     """Calculate residence time of water molecules in monolayers
@@ -140,10 +138,9 @@ def calc_res_time(file_name,
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
-                print 'Done reading ' + file_name
+                print 'Reached end of ' + file_name
                 break
             steps.append(step)
-            print 'Read timestep ' + str(step)
             if step == 0:
                 # select z-coords of water atoms
                 first = xyz[system_info['water']][:, 2]

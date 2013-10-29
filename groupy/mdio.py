@@ -14,10 +14,10 @@ def read_frame_lammpstrj(trj, read_velocities=False):
         xyz (numpy.ndarray):
         types (numpy.ndarray):
         step (int):
-        box_size (numpy.ndarray):
+        box (numpy.ndarray):
         vxyz (numpy.ndarray):
     """
-    box_size = np.empty(shape=(3, 2))
+    box = np.empty(shape=(3, 2))
 
     # --- begin header ---
     trj.readline()  # text
@@ -25,15 +25,15 @@ def read_frame_lammpstrj(trj, read_velocities=False):
     trj.readline()  # text
     n_atoms = int(trj.readline())  # num atoms
     trj.readline()  # text
-    box_size[0] = trj.readline().split()  # x-dim of box
-    box_size[1] = trj.readline().split()  # y-dim of box
-    box_size[2] = trj.readline().split()  # z-dim of box
+    box[0] = trj.readline().split()  # x-dim of box
+    box[1] = trj.readline().split()  # y-dim of box
+    box[2] = trj.readline().split()  # z-dim of box
     trj.readline()  # text
     # --- end header ---
 
     xyz = np.empty(shape=(n_atoms, 3))
     xyz[:] = np.NAN
-    types = np.empty(shape=(n_atoms))
+    types = np.empty(shape=(n_atoms), dtype='int')
     if read_velocities:
         vxyz = np.empty(shape=(n_atoms, 3))
         vxyz[:] = np.NAN
@@ -49,22 +49,37 @@ def read_frame_lammpstrj(trj, read_velocities=False):
     # --- end body ---
 
     if read_velocities:
-        return xyz, types, step, box_size, vxyz
+        return xyz, types, step, box, vxyz
     else:
-        return xyz, types, step, box_size
+        return xyz, types, step, box
 
 
 def read_xyz(file_name):
-    """Load an xyz file into an array
+    """Load an xyz file into a coordinate and a type array
     """
     with open(file_name, 'r') as f:
         n_atoms = int(f.readline())  # num atoms
         f.readline()  # discard comment line
 
         xyz = np.empty(shape=(n_atoms, 3))
-        types = np.empty(shape=(n_atoms), dtype='string')
+        types = np.empty(shape=(n_atoms), dtype='object')
         for i in range(n_atoms):
             temp = f.readline().split()
             types[i] = temp[0]  # atom type
             xyz[i] = map(float, temp[1:4])  # coordinates
         return xyz, types
+
+
+def write_xyz(file_name, xyz, types, comment=''):
+    """Write an xyz file
+    """
+    assert xyz.shape[0] == types.shape[0]
+
+    with open(file_name, 'w') as f:
+        f.write(str(xyz.shape[0]) + '\n')  # num atoms
+        f.write(comment + '\n')  # comment line
+
+        for i, atom in enumerate(types):
+            # type  x y z
+            f.write('%s %8.3f %8.3f %8.3f\n' %  
+                    (atom, xyz[i, 0], xyz[i, 1], xyz[i, 2]))

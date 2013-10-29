@@ -3,7 +3,7 @@ from groupy.monolayers import *
 
 
 # --- user specifications ---
-file_name = ('data_files/mpc_0.2_35_shortened.lammpstrj')
+file_name = 'data_files/mpc_0.2_35.lammpstrj'
 n_planes = 100  # number of flux planes
 
 # --- system info ---
@@ -38,15 +38,12 @@ z_max = xyz[system_info['topsub']][:, 2].min()
 planes = np.linspace(z_min, z_max, n_planes)
 
 # where the magic happens
-fluxes, steps = calc_flux(file_name,
-        system_info,
-        planes,
-        area,
-        max_time=1e6)
+fluxes, steps = calc_flux(file_name, system_info, planes, area) 
+
 # convert atoms / (angstrom^2 * fs) to h2o_molecules / (nm^2 * ps)
 fluxes = fluxes * (100 * 1000 / 3)
 
-# calculate time averaged flux across each plane
+# calculate time averaged flux across each plane using linear fit
 avg_fluxes = np.empty(shape=(n_planes))
 for i in range(fluxes.shape[1]):
     p = np.polyfit(steps, fluxes[:, i], 1)
@@ -57,4 +54,6 @@ fig = plt.figure()
 plt.plot(avg_fluxes, planes)
 plt.xlabel(ur'Flux (molecules/nm$\mathregular{^2\cdot}$ ps)')
 plt.ylabel(ur'z (\u00c5)')
-fig.savefig('flux_vs_z.pdf', bbox_inches='tight')
+fig_name = 'flux_vs_z.pdf'
+fig.savefig(fig_name, bbox_inches='tight')
+print 'Saved ' + fig_name
