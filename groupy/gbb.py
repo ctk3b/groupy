@@ -1,12 +1,11 @@
 import numpy as np
-import copy
 
 from groupy.mdio import *
 from groupy.general import *
 
 
-class gbb():
-    """
+class Gbb():
+    """Generic building block
     """
     def __init__(self):
         """

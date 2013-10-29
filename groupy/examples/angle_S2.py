@@ -1,10 +1,10 @@
 import numpy as np
-import pdb
+import copy
 
 from groupy.order import *
 from groupy.general import *
 from groupy.mdio import *
-from groupy.gbb import *
+from groupy.gbb import Gbb
 
 
 # --- user input ---
@@ -12,7 +12,7 @@ coverage = 0.2
 file_name = 'data_files/peg6_' + str(coverage) + '.lammpstrj'
 max_time = 1e6
 
-peg = gbb()
+peg = Gbb()
 peg.load_xyz('data_files/peg6.xyz')
 peg.load_mass('data_files/peg6_mass.txt')
 
