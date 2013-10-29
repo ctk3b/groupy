@@ -11,14 +11,12 @@ def find_nearest(array, target):
 
 
 def anint(x):
-    """
+    """Switching function used for PBC unwrapping
     """
     if x >= 0.5:
         return 1.
-    elif x < -0.5:
-        return -1.
     else:
-        return 0.
+        return -1.
 
 
 def calc_angle(u, v, already_normed=True):

@@ -38,7 +38,7 @@ z_max = xyz[system_info['topsub']][:, 2].min()
 planes = np.linspace(z_min, z_max, n_planes)
 
 # where the magic happens
-fluxes, steps = calc_flux(file_name, system_info, planes, area) 
+fluxes, steps = calc_flux(file_name, system_info, planes, area)
 
 # convert atoms / (angstrom^2 * fs) to h2o_molecules / (nm^2 * ps)
 fluxes = fluxes * (100 * 1000 / 3)

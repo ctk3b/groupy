@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 from groupy.mdio import *
 from groupy.general import *
