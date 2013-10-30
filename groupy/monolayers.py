@@ -56,9 +56,6 @@ def calc_flux(file_name,
         area (float): surface area of planes
     Returns:
         fluxes_over_time (np.ndarray): fluxes through 'planes'
-
-    TODO:
-        -multiple planes simultaneously
     """
     steps = list()
     fluxes_over_time = np.empty(shape=(0, len(planes)))
@@ -76,7 +73,7 @@ def calc_flux(file_name,
             if step > 0:
                 steps.append(step)
                 fluxes = np.empty(shape=(1, len(planes)))
-                for i, plane in enumerate(planes):
+                for i, plane in enumerate(planes): # TODO: vectorize
                     # select water atoms that were and are above the flux plane
                     were_above = np.where(prev_water > plane)[0]
                     are_above = np.where(water > plane)[0]
