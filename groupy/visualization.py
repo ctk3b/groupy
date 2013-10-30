@@ -10,12 +10,16 @@ a_info = {'C': ('teal', 1.7),
           'N': ('blue', 1.55),
           'P': ('orange', 1.8),
           'Si': ('yellow', 2.1)}
+"""
+# corresponding RGB values for colors
 a_info_maya = {'C': ((0, 0.8, 0.8), 1.7),
                'H': ((1, 1, 1), 1.2),
                'O': ((1, 0, 0), 1.52),
                'N': ((0, 0, 1), 1.55),
                'P': ((1, 0.5, 0), 1.8),
                'Si': ((1, 1, 0), 2.1)}
+"""
+# simplified color values to work with color_by_scalar
 a_info_maya = {'C': (2, 1.7),
                'H': (1, 1.2),
                'O': (3, 1.52),
@@ -32,17 +36,18 @@ def splat(xyz, types=None, direction=None):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    for i, atom in enumerate(xyz):
-        if types is None:
-            ax.scatter(atom[0], atom[1], atom[2],
-            marker='o',
-            s=100)
-        else:
-            ax.scatter(atom[0], atom[1], atom[2],
-            c=a_info[types[i]][0],
-            marker='o',
-            s=100 * a_info[types[i]][1] ** 3)
-
+   
+    if types is None:
+        ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
+        marker='o',
+        s=100)
+    else:
+        colors = [a_info[x][0] for x in types]
+        sizes = [a_info[x][1] for x in types]
+        ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
+        c=colors, 
+        marker='o',
+        s=[100 * x ** 3 for x in sizes])
 
     bounds = [xyz.min(), xyz.max()]
     ax.set_xlim(bounds)
@@ -70,7 +75,7 @@ def splat_maya(xyz, types=None, direction=None):
         -show director
     """
     try:
-        import mayevi.mlab as mlab
+        import mayavi.mlab as mlab
     except:
         print ('Failed to import mayavi. '
             + 'Please ensure that mayavi is properly installed.')
