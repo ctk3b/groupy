@@ -35,7 +35,6 @@ def splat(xyz, types=None, direction=None):
     """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-
    
     if types is None:
         ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
