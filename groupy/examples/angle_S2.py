@@ -32,7 +32,7 @@ with open(file_name, 'r') as trj:
         try:
             xyz, types, step, box = read_frame_lammpstrj(trj)
         except:
-            print 'Reached end of ' + file_name
+            print "Reached end of '" + file_name + "'"
             break
 
         # filter out terminal hydrogen atoms

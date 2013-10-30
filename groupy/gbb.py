@@ -12,27 +12,32 @@ class Gbb():
     def __init__(self):
         """
         """
+        # numbas
         self.n_atoms = None
         self.n_bonds = None
         self.n_angles = None
         self.n_dihedrals = None
 
-        self.types = None
         self.mol_id = None
 
+        # per atom
+        self.types = None
+        self.masses = None
+        self.charges = None
         self.xyz = None
 
+        # connectivity
         self.bonds = None
         self.angles = None
         self.dihedrals = None
 
+        # forcefield info
         self.pair_types = dict()
         self.bond_types = dict()
         self.angle_types = dict()
         self.dihedral_types = dict()
 
-        self.masses = None
-        self.charges = None
+        # properties
         self.com = None
 
     # --- calculable properties ---

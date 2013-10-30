@@ -28,7 +28,7 @@ def calc_film_heights(file_name, system_info):
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
-                print 'Reached end of ' + file_name
+                print "Reached end of '" + file_name + "'"
                 break
             # temp container for z-coords of top, [0], and bottom, [1], films
             temp_heights = np.empty(shape=(2, len(system_info['botfilm'])))
@@ -68,7 +68,7 @@ def calc_flux(file_name,
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
-                print 'Reached end of ' + file_name
+                print "Reached end of '" + file_name + "'"
                 break
 
             # select z-coords of water atoms
@@ -138,7 +138,7 @@ def calc_res_time(file_name,
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
-                print 'Reached end of ' + file_name
+                print "Reached end of '" + file_name + "'"
                 break
             steps.append(step)
             if step == 0:
