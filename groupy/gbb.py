@@ -218,7 +218,7 @@ class Gbb():
         Returns:
             box (numpy.ndarray): box dimensions
         """
-        print 'Reading: ' + data_file
+        print "Reading '" + data_file + "'"
         with open(data_file, 'r') as f:
             data_lines = f.readlines()
 

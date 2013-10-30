@@ -81,5 +81,6 @@ def write_xyz(file_name, xyz, types, comment=''):
 
         for i, atom in enumerate(types):
             #        type   x     y     z
-            f.write('%s %8.3f %8.3f %8.3f\n' %  
+            f.write('%s %8.3f %8.3f %8.3f\n' %
                     (atom, xyz[i, 0], xyz[i, 1], xyz[i, 2]))
+    print "Wrote file '" + file_name + "'"
