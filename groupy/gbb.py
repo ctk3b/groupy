@@ -7,7 +7,7 @@ from groupy.general import *
 
 
 class Gbb():
-    """Generic building block
+    """Generic building block.
     """
     def __init__(self):
         """
@@ -42,7 +42,7 @@ class Gbb():
 
     # --- calculable properties ---
     def calc_com(self):
-        """Calculate center of mass of a set of points
+        """Calculate center of mass of a set of points.
         """
         assert self.xyz.shape[0] == self.masses.shape[0]
         cum_mass = 0
@@ -54,7 +54,7 @@ class Gbb():
         self.com = com
 
     def calc_inertia_tensor(self):
-        """Calculates the moment of inertia tensor of the gbb
+        """Calculates the moment of inertia tensor of the gbb.
 
         Returns:
             I (np.ndarray): moment of inertia tensor
@@ -90,7 +90,7 @@ class Gbb():
         pass
 
     def unwrap(self, box, dim=[True, True, True]):
-        """Unwrap periodic boundary conditons of an object
+        """Unwrap periodic boundary conditons of an object.
 
         Requires that object being unwrapped does not span more than half the
         box length.
@@ -104,7 +104,7 @@ class Gbb():
                         self.xyz[i, k] -= box_length * anint(dr / box_length)
 
     def wrap(self, box, dim=[True, True, True]):
-        """Wrap coordinates for PBC
+        """Wrap coordinates for PBC.
         """
 
         for i, coords in enumerate(self.xyz):
@@ -116,7 +116,7 @@ class Gbb():
                         self.xyz[i, k] = box[k, 0] + abs(c - box[k, 1])
 
     def mirror(self, box, dim=[False, False, True], d=0.0, verbose=False):
-        """Creates a mirror image of gbb in a given direction
+        """Creates a mirror image of gbb in a given direction.
 
         Intended to prepare SAM systems for shearing.
 
@@ -191,7 +191,7 @@ class Gbb():
         self.n_atoms = self.xyz.shape[0]
 
     def load_data(self, data_file, name='', verbose=False):
-        """Reads a LAMMPS data file into a gbb object
+        """Reads a LAMMPS data file into a gbb object.
 
         *** Only works for directives delimited by blank lines ***
 

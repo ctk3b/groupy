@@ -5,7 +5,7 @@ from groupy.general import *
 
 
 def calc_director(I):
-    """Calculates characteristic vector describing, e.g. a polymer
+    """Calculates characteristic vector describing, e.g. a polymer.
 
     Args:
         I (np.ndarray): 3x3 moment of inertia tensor
@@ -19,7 +19,7 @@ def calc_director(I):
 
 
 def calc_Q_tensor(directors):
-    """
+    """Calculate Q tensor of set of directors.
     """
     normed = directors / np.sqrt((directors ** 2).sum(-1))[..., np.newaxis]
     Q = np.zeros(shape=(3, 3))
@@ -38,7 +38,7 @@ def calc_Q_tensor(directors):
 
 
 def calc_S2(Q):
-    """Calculate nematic order parameter (S2)
+    """Calculate nematic order parameter (S2).
     """
     assert Q.shape == (3, 3)
     w, v = np.linalg.eig(Q)

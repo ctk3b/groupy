@@ -3,7 +3,7 @@ import pdb
 
 
 def read_frame_lammpstrj(trj, read_velocities=False):
-    """Load a frame from a lammps dump file
+    """Load a frame from a lammps dump file.
 
     Args:
         trj (file): LAMMPS dump file of format 'ID type x y z' or
@@ -55,7 +55,7 @@ def read_frame_lammpstrj(trj, read_velocities=False):
 
 
 def read_xyz(file_name):
-    """Load an xyz file into a coordinate and a type array
+    """Load an xyz file into a coordinate and a type array.
     """
     with open(file_name, 'r') as f:
         n_atoms = int(f.readline())  # num atoms
@@ -71,7 +71,7 @@ def read_xyz(file_name):
 
 
 def write_xyz(file_name, xyz, types, comment=''):
-    """Write an xyz file
+    """Write an xyz file.
     """
     assert xyz.shape[0] == types.shape[0]
 

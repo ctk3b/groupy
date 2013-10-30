@@ -3,15 +3,14 @@ import numpy as np
 
 # --- general handy stuff ---
 def find_nearest(array, target):
-    """Find index and value of array component whose numeric
-    value is closest to 'target'
+    """Find array component whose numeric value is closest to 'target'.
     """
     idx = np.abs(array - target).argmin()
     return idx, array[idx]
 
 
 def anint(x):
-    """Switching function used for PBC unwrapping
+    """Switching function used for PBC unwrapping.
     """
     if x >= 0.5:
         return 1.

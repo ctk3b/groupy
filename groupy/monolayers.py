@@ -46,7 +46,7 @@ def calc_flux(file_name,
         planes,
         area,
         max_time=np.inf):
-    """Calculate fluxes of water across multiple x-y planes
+    """Calculate fluxes of water across multiple x-y planes.
 
     Args:
         file_name (str): name of trajectory to read
@@ -97,7 +97,7 @@ def calc_res_time(file_name,
         max_time=np.inf,
         return_data=False,
         plot=False):
-    """Calculate residence time of water molecules in monolayers
+    """Calculate residence time of water molecules in monolayers.
 
     Args:
         file_name (str): name of trajectory to read
@@ -189,7 +189,7 @@ def calc_res_time(file_name,
 
 
 def find_cutoff(film, heights, plot=False):
-    """Find z-coordinates that includes 90% of the points in 'heights'
+    """Find z-coordinates that includes 90% of the points in 'heights'.
 
     Fits a Rayleigh distribution function a row 'heights' and calculates the
     z-coordinates that encompass 90% of the cumulative distribution function.

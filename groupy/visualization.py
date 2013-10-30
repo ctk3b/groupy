@@ -27,7 +27,7 @@ a_info_maya = {'C': (2, 1.7),
 
 
 def splat(xyz, types=None, direction=None):
-    """Dump coordinates into 3D plot and show it
+    """Dump coordinates into 3D plot and show it using matplotlib.
     """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -62,7 +62,7 @@ def splat(xyz, types=None, direction=None):
     plt.show()
 
 def splat_maya(xyz, types=None, direction=None):
-    """Dump coordinates into 3D plot and show it
+    """Dump coordinates into 3D plot and show it using mayavi.
 
     TODO:
         -resolve crashing window issue
