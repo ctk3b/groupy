@@ -7,3 +7,5 @@
 Add the base directory to your python path, e.g:
 
     export PYTHONPATH=$PYTHONPATH:/Users/JohnDoe/groupy
+
+Proper installation coming soon!
