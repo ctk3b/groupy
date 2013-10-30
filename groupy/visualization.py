@@ -69,7 +69,13 @@ def splat_maya(xyz, types=None, direction=None):
         -choosing specific colors instead of by scalar
         -show director
     """
-    import mayavi.mlab as mlab
+    try:
+        import mayevi.mlab as mlab
+    except:
+        print ('Failed to import mayavi. '
+            + 'Please ensure that mayavi is properly installed.')
+        return
+
     if types is None:
         mlab.points3d(xyz[:, 0], xyz[:, 1], xyz[:, 2])
     else:
