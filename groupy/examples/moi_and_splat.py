@@ -13,3 +13,7 @@ director = calc_director(I)
 splat(mpc.xyz, mpc.types, director)  # with the director
 splat(mpc.xyz, mpc.types)  # without the director
 splat(mpc.xyz)  # without pretty colors and sizing
+
+# splat using mayavi; mostly works but windows crash when closed
+splat_maya(mpc.xyz, mpc.types)
+splat_maya(mpc.xyz)

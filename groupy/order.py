@@ -12,6 +12,7 @@ def calc_director(I):
     Returns:
         director (np.ndarray): characteristic vector
     """
+    assert I.shape == (3, 3)
     w, v = np.linalg.eig(I)
     director = v[:, np.argmin(w)]
     return director
@@ -21,7 +22,7 @@ def calc_Q_tensor(directors):
     """
     """
     normed = directors / np.sqrt((directors ** 2).sum(-1))[..., np.newaxis]
-    Q = np.zeros(shape=(3,3))
+    Q = np.zeros(shape=(3, 3))
     for vector in normed:
         Q[0, 0] += 3.0 * vector[0] * vector[0] - 1
         Q[0, 1] += 3.0 * vector[0] * vector[1]
@@ -39,6 +40,7 @@ def calc_Q_tensor(directors):
 def calc_S2(Q):
     """Calculate nematic order parameter (S2)
     """
+    assert Q.shape == (3, 3)
     w, v = np.linalg.eig(Q)
     S2 = w.max()
     return S2

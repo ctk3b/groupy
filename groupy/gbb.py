@@ -202,9 +202,9 @@ class Gbb():
             Dihedrals
 
         TODO:
+            -add this function to mdio.py and add a call to populate gbb
             -handling for comments
             -handling for directives not delimited by blank lines
-            -box dimension RE matching
             -allow specification of forcefield styles
 
         Args:
