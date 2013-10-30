@@ -1,4 +1,4 @@
-### Tools for setting up and analyzing molecular dynamics simulations
+#### Tools for setting up and analyzing molecular dynamics simulations
 
 ###### Installation
 
