@@ -2,7 +2,7 @@
 
 ###### Installation
 
-    git clone
+    git clone https://github.com/ctk3b/groupy.git
 
 Add the base directory to your python path, e.g:
 
