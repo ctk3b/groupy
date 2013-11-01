@@ -1,4 +1,5 @@
 import numpy as np
+from scipy.spatial.distance import sqeuclidean
 import copy
 
 from groupy.mdio import *
@@ -39,6 +40,7 @@ class Gbb():
 
         # properties
         self.com = float()
+        self.r_gyr_sq = float()
 
     # --- calculable properties ---
     def calc_com(self):
@@ -47,9 +49,8 @@ class Gbb():
         assert self.xyz.shape[0] == self.masses.shape[0]
         cum_mass = 0
         com = np.array([0., 0., 0.])
-        for i, coord in enumerate(self.xyz):
-            com += coord * self.masses[i]
-            cum_mass += self.masses[i]
+        com = np.sum(self.xyz.T * self.masses, axis=1)
+        cum_mass = np.sum(self.masses)
         com /= cum_mass
         self.com = com
 
@@ -76,8 +77,13 @@ class Gbb():
         I[2, 1] = I[1, 2]
         return I
 
-    def calc_r_gyr():
-        pass
+    def calc_r_gyr_sq(self):
+        """Calculate radius of gyration.
+        """
+        pos_mean = np.mean(self.xyz, axis=0)
+        r_gyr_sq = np.sum(np.sum(np.abs(self.xyz - pos_mean)**2, axis=1))
+        r_gyr_sq /= self.xyz.shape[0]
+        self.r_gyr_sq =  r_gyr_sq
 
     # --- deformations ---
     def translate():
@@ -90,7 +96,7 @@ class Gbb():
         pass
 
     def unwrap(self, box, dim=[True, True, True]):
-        """Unwrap periodic boundary conditons of an object.
+        """Unwrap periodic boundary conditons.
 
         Requires that object being unwrapped does not span more than half the
         box length.
