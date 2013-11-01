@@ -86,11 +86,36 @@ class Gbb():
         self.r_gyr_sq =  r_gyr_sq
 
     # --- deformations ---
-    def translate():
+    def translate(shift=[0.0, 0.0, 0.0]):
         pass
 
-    def rotate():
-        pass
+    def rotate(self, axes=[False, False, False], angles=[0.0, 0.0, 0.0]):
+        """Rotate around given axes by given angles
+        """
+        if axes[0]:
+            theta = angles[0]
+            T = np.eye(3)
+            T[1, 1] = np.cos(theta)
+            T[1, 2] = -np.sin(theta)
+            T[2, 1] = np.sin(theta)
+            T[2, 2] = np.cos(theta)
+            self.xyz = np.dot(self.xyz, T.T)
+        if axes[1]:
+            theta = angles[1]
+            T = np.eye(3)
+            T[0, 0] = np.cos(theta)
+            T[0, 2] = np.sin(theta)
+            T[2, 0] = -np.sin(theta)
+            T[2, 2] = np.cos(theta)
+            self.xyz = np.dot(self.xyz, T.T)
+        if axes[2]:
+            theta = angles[2]
+            T = np.eye(3)
+            T[0, 0] = np.cos(theta)
+            T[0, 1] = -np.sin(theta)
+            T[1, 0] = np.sin(theta)
+            T[1, 1] = np.cos(theta)
+            self.xyz = np.dot(self.xyz, T.T)
 
     def scale():
         pass
