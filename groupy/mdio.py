@@ -4,7 +4,7 @@ import pdb
 
 
 def read_frame_lammpstrj(trj, read_velocities=False):
-    """Load a frame from a lammps dump file.
+    """Load a frame from a LAMMPS dump file.
 
     Args:
         trj (file): LAMMPS dump file of format 'ID type x y z' or
@@ -109,7 +109,7 @@ def read_lammps_data(data_file, verbose=False):
         -allow specification of forcefield styles
 
     Args:
-        data_file (str): name of lammps data file to read in
+        data_file (str): name of LAMMPS data file to read in
     Returns:
         lmp_data (dict):
             'xyz': xyz (numpy.ndarray)
@@ -140,15 +140,15 @@ def read_lammps_data(data_file, verbose=False):
         data_lines = f.readlines()
 
     directives = re.compile(r"""
-        ((?P<n_atoms>.*atoms)
+        ((?P<n_atoms>\d+\s+atoms)
         |
-        (?P<n_bonds>.*bonds)
+        (?P<n_bonds>\d+\s+bonds)
         |
-        (?P<n_angles>.*angles)
+        (?P<n_angles>\d+\s+angles)
         |
-        (?P<n_dihedrals>.*dihedrals)
+        (?P<n_dihedrals>\d+\s+dihedrals)
         |
-        (?P<box>.*xlo)
+        (?P<box>.+xlo)
         |
         (?P<Masses>Masses)
         |
@@ -210,7 +210,6 @@ def read_lammps_data(data_file, verbose=False):
                 data_lines.pop(i)
 
                 mass_dict = dict()  # type:mass
-
                 #     not end of file         not blank line
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = data_lines.pop(i).split()
@@ -301,7 +300,6 @@ def read_lammps_data(data_file, verbose=False):
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = map(int, data_lines.pop(i).split())
                     dihedrals[fields[0] - 1] = fields[1:]
-
             else:
                 i += 1
         else:
@@ -323,7 +321,7 @@ def read_lammps_data(data_file, verbose=False):
 
 
 def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
-    """Write gbb to lammps data file
+    """Write gbb to LAMMPS data file
 
     Args:
         gbb (Gbb): gbb object to write
@@ -347,11 +345,11 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
 
         f.write(str(gbb.types.max()) + ' atom types\n')
         if n_bonds > 0:
-            f.write(str(len(gbb.bond_types)) + ' bond types\n')
+            f.write(str(gbb.bonds[:, 0].max()) + ' bond types\n')
         if n_angles > 0:
-            f.write(str(len(gbb.angle_types)) + ' angle types\n')
+            f.write(str(gbb.angles[:, 0].max()) + ' angle types\n')
         if n_dihedrals > 0:
-            f.write(str(len(gbb.dihedral_types)) + ' dihedral types\n')
+            f.write(str(gbb.dihedrals[:, 0].max()) + ' dihedral types\n')
         f.write('\n')
 
         f.write(str(box[0, 0]) + ' ' + str(box[0, 1]) + ' xlo xhi\n')
@@ -405,3 +403,80 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
 
     print "Wrote file '" + file_name + "'"
 
+
+def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
+    """Write gbb to GROMACS .gro file
+
+    Note: to my knowledge GROMACS only deals with positive coordinate
+    values. Use method 'positive_coords' to shift coordinates appropriately
+
+    Args:
+        grofile (str): name of .gro structure file
+    """
+    with open(grofile, 'w') as f:
+        f.write(sys_name + '\n')
+        f.write(str(gbb.xyz.shape[0]) + '\n')
+        for atom in self.atoms:
+            line = ('%5d%-4s%6s%5d%8.3f%8.3f%8.3f\n'
+                      %(atom.molID,
+                        atom.moltype,
+                        atom.atomname,
+                        atom.ID,
+                        atom.xyz[0],
+                        atom.xyz[1],
+                        atom.xyz[2]))
+            f.write(line)
+        box = ('%10.5f%10.5f%10.5f\n'
+               %(self.box[0, 1],
+                 self.box[1, 1],
+                 self.box[2, 1]))
+        f.write(box)
+    print "Wrote file '" + grofile + "'"
+
+    self.atoms.sort(key=operator.attrgetter('moltype'))
+
+
+def write_top(gbb, topfile='system.top'):
+    """Write forcefield information to GROMACS .top file
+
+    *** THIS IS ONLY THE SKELETON FOR THE FORMAT ***
+
+    TODO:
+        -fill in body 
+    """
+    with open(topfile, 'w') as f:
+
+        # defaults
+        f.write('[ defaults ]\n')
+        f.write('%d%16d%18s%20.4f$8.4f\n'
+                %(1, 3, 'yes', 1, 1)) #  TODO: read options from lmps file
+
+        # atomtypes
+        f.write('[ atomtypes ]\n')
+        f.write('\n')
+
+        # moleculetype
+        for a in blah:  # BROKED
+            f.write('[ moleculetype ]\n')
+            f.write('\n')
+            f.write('[ atoms ]\n')
+            f.write('\n')
+
+            f.write('[ bonds ]\n')
+            for bond in self.bonds:
+                r = bond_types[bond[1]] 
+                k = 1 
+                f.write('%6d%7d%4d%18.8e%18.8e\n'
+                        %(bond[2], bond[3], 1, r, k))
+
+            f.write('[ angles ]\n')
+            f.write('\n')
+            f.write('[ dihedrals ]\n')
+            f.write('\n')
+
+        # system
+        f.write('[ system ]\n')
+
+        # molecules
+        f.write('[ molecules ]\n')
+    print "Wrote file '" + topfile + "'"
