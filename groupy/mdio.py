@@ -139,6 +139,7 @@ def read_lammps_data(data_file, verbose=False):
     with open(data_file, 'r') as f:
         data_lines = f.readlines()
 
+    # TODO: improve robustness of xlo regex
     directives = re.compile(r"""
         ((?P<n_atoms>\d+\s+atoms)
         |
@@ -416,24 +417,25 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
     with open(grofile, 'w') as f:
         f.write(sys_name + '\n')
         f.write(str(gbb.xyz.shape[0]) + '\n')
-        for atom in self.atoms:
+        for i, coord in enumerate(gbb.xyz):
             line = ('%5d%-4s%6s%5d%8.3f%8.3f%8.3f\n'
-                      %(atom.molID,
-                        atom.moltype,
-                        atom.atomname,
-                        atom.ID,
-                        atom.xyz[0],
-                        atom.xyz[1],
-                        atom.xyz[2]))
+                      %(1,
+                        'MOL',
+                        gbb.types[i],
+                        #gbb.names[i], TODO: implement proper names in gbb
+                        i+1, 
+                        coord[0],
+                        coord[1],
+                        coord[2]))
             f.write(line)
         box = ('%10.5f%10.5f%10.5f\n'
-               %(self.box[0, 1],
-                 self.box[1, 1],
-                 self.box[2, 1]))
+               %(box[0, 1],
+                 box[1, 1],
+                 box[2, 1]))
         f.write(box)
     print "Wrote file '" + grofile + "'"
 
-    self.atoms.sort(key=operator.attrgetter('moltype'))
+    #self.atoms.sort(key=operator.attrgetter('moltype'))
 
 
 def write_top(gbb, topfile='system.top'):
@@ -449,7 +451,7 @@ def write_top(gbb, topfile='system.top'):
         # defaults
         f.write('[ defaults ]\n')
         f.write('%d%16d%18s%20.4f$8.4f\n'
-                %(1, 3, 'yes', 1, 1)) #  TODO: read options from lmps file
+                %(1, 3, 'yes', 1, 1)) #  TODO: options need global storage 
 
         # atomtypes
         f.write('[ atomtypes ]\n')
@@ -463,9 +465,9 @@ def write_top(gbb, topfile='system.top'):
             f.write('\n')
 
             f.write('[ bonds ]\n')
-            for bond in self.bonds:
-                r = bond_types[bond[1]] 
-                k = 1 
+            for bond in gbb.bonds:
+                r = gbb.bond_types[bond][1] 
+                k = gbb.bond_types[bond][2] 
                 f.write('%6d%7d%4d%18.8e%18.8e\n'
                         %(bond[2], bond[3], 1, r, k))
 
