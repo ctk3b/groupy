@@ -86,8 +86,12 @@ class Gbb():
         self.r_gyr_sq =  r_gyr_sq
 
     # --- deformations ---
-    def translate(shift=[0.0, 0.0, 0.0]):
-        pass
+    def translate(self, x=0.0, y=0.0, z=0.0, slow=False):
+        """Translate by scalars
+        """
+        self.xyz[:, 0] += x
+        self.xyz[:, 1] += y
+        self.xyz[:, 2] += z
 
     def rotate(self, axes=[False, False, False], angles=[0.0, 0.0, 0.0]):
         """Rotate around given axes by given angles
