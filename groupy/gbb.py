@@ -1,6 +1,5 @@
 import numpy as np
 import copy
-import re
 
 from groupy.mdio import *
 from groupy.general import *
@@ -12,24 +11,25 @@ class Gbb():
     def __init__(self):
         """
         """
-        # numbas
-        self.n_atoms = None
-        self.n_bonds = None
-        self.n_angles = None
-        self.n_dihedrals = None
+        self.name = ''
 
-        self.mol_id = None
+        # numbas
+        self.n_atoms = int()
+        self.n_bonds = int()
+        self.n_angles = int()
+        self.n_dihedrals = int()
+        self.mol_id = int()
 
         # per atom
-        self.types = None
-        self.masses = None
-        self.charges = None
-        self.xyz = None
+        self.types = np.empty(shape=(0, 1), dtype='int')
+        self.masses = np.empty(shape=(0, 1))
+        self.charges = np.empty(shape=(0, 1))
+        self.xyz = np.empty(shape=(0, 3))
 
         # connectivity
-        self.bonds = None
-        self.angles = None
-        self.dihedrals = None
+        self.bonds = np.empty(shape=(0, 3))
+        self.angles = np.empty(shape=(0, 4))
+        self.dihedrals = np.empty(shape=(0, 5))
 
         # forcefield info
         self.pair_types = dict()
@@ -38,7 +38,7 @@ class Gbb():
         self.dihedral_types = dict()
 
         # properties
-        self.com = None
+        self.com = float()
 
     # --- calculable properties ---
     def calc_com(self):
@@ -190,210 +190,17 @@ class Gbb():
         self.xyz, self.types = read_xyz(file_name)
         self.n_atoms = self.xyz.shape[0]
 
-    def load_data(self, data_file, name='', verbose=False):
-        """Reads a LAMMPS data file into a gbb object.
-
-        *** Only works for directives delimited by blank lines ***
-
-        Currently supports the following directives:
-            Masses
-            Pair Coeffs (must be mix geometry)
-            Bond Coeffs (must be harmonic)
-            Angle Coeffs (must be harmonic)
-            Dihedral Coeffs (must be OPLS)
-            Atoms
-            Bonds
-            Angles
-            Dihedrals
-
-        TODO:
-            -add this function to mdio.py and add a call to populate gbb
-            -handling for comments
-            -handling for directives not delimited by blank lines
-            -allow specification of forcefield styles
-
-        Args:
-            data_file (str): name of lammps data file to read in
-            name (str): name for system
-        Returns:
-            box (numpy.ndarray): box dimensions
-        """
-        print "Reading '" + data_file + "'"
-        with open(data_file, 'r') as f:
-            data_lines = f.readlines()
-
-        if name:
-            self.name = name
-        else:
-            # toss out 'data.'
-            prefix = re.search(r'\..+', data_file).group().strip('.')
-            self.name = prefix
-
-        directives = re.compile(r"""
-            ((?P<n_atoms>.*atoms)
-            |
-            (?P<n_bonds>.*bonds)
-            |
-            (?P<n_angles>.*angles)
-            |
-            (?P<n_dihedrals>.*dihedrals)
-            |
-            (?P<box>.*xlo)
-            |
-            (?P<Masses>Masses)
-            |
-            (?P<PairCoeffs>Pair\sCoeffs)
-            |
-            (?P<BondCoeffs>Bond\sCoeffs)
-            |
-            (?P<AngleCoeffs>Angle\sCoeffs)
-            |
-            (?P<DihedralCoeffs>Dihedral\sCoeffs)
-            |
-            (?P<Atoms>Atoms)
-            |
-            (?P<Bonds>Bonds)
-            |
-            (?P<Angles>Angles)
-            |
-            (?P<Dihedrals>Dihedrals))
-            """, re.VERBOSE)
-
-        i = 0
-        while i < len(data_lines):
-            match = directives.match(data_lines[i])
-            if match:
-                if verbose:
-                    print(match.groups())
-
-                elif match.group('n_atoms'):
-                    fields = data_lines.pop(i).split()
-                    self.n_atoms = int(fields[0])
-                    self.xyz = np.empty(shape=(self.n_atoms, 3))
-                    self.types = np.empty(shape=(self.n_atoms))
-                    self.masses = np.empty(shape=(self.n_atoms))
-                    self.charges = np.empty(shape=(self.n_atoms))
-
-                elif match.group('n_bonds'):
-                    fields = data_lines.pop(i).split()
-                    self.bonds = np.empty(shape=(float(fields[0]), 3))
-
-                elif match.group('n_angles'):
-                    fields = data_lines.pop(i).split()
-                    self.angles = np.empty(shape=(float(fields[0]), 4))
-
-                elif match.group('n_dihedrals'):
-                    fields = data_lines.pop(i).split()
-                    self.dihedrals = np.empty(shape=(float(fields[0]), 5))
-
-                elif match.group('box'):
-                    box = np.zeros(shape=(3, 2))
-                    for j in range(3):
-                        fields = map(float, data_lines.pop(i).split()[:2])
-                        box[j, 0] = fields[0]
-                        box[j, 1] = fields[1]
-
-                elif match.group('Masses'):
-                    if verbose:
-                        print 'Parsing Masses...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    masses = dict()  # type:mass
-
-                    #     not end of file         not blank line
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = data_lines.pop(i).split()
-                        masses[int(fields[0])] = float(fields[1])
-
-                elif match.group('Atoms'):
-                    if verbose:
-                        print 'Parsing Atoms...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = data_lines.pop(i).split()
-                        a_id = int(fields[0])
-                        self.types[a_id - 1] = int(fields[2])
-                        self.masses[a_id - 1] = masses[int(fields[2])]
-                        self.charges[a_id - 1] = float(fields[3])
-                        self.xyz[a_id - 1] = np.array([float(fields[4]),
-                                             float(fields[5]),
-                                             float(fields[6])])
-
-                elif match.group('PairCoeffs'):
-                    if verbose:
-                        print 'Parsing Pair Coeffs...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = data_lines.pop(i).split()
-                        self.pair_types[int(fields[0])] = (float(fields[1]),
-                                                      float(fields[2]))
-                elif match.group('BondCoeffs'):
-                    if verbose:
-                        print 'Parsing Bond Coeffs...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = map(float, data_lines.pop(i).split())
-                        self.bond_types[int(fields[0])] = fields[1:]
-
-                elif match.group('AngleCoeffs'):
-                    if verbose:
-                        print 'Parsing Angle Coeffs...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = map(float, data_lines.pop(i).split())
-                        self.angle_types[int(fields[0])] = fields[1:]
-
-                elif match.group('DihedralCoeffs'):
-                    if verbose:
-                        print 'Parsing Dihedral Coeffs...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = map(float, data_lines.pop(i).split())
-                        self.dihedral_types[int(fields[0])] = fields[1:]
-
-                elif match.group('Bonds'):
-                    if verbose:
-                        print 'Parsing Bonds...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = map(int, data_lines.pop(i).split())
-                        self.bonds[fields[0] - 1] = fields[1:]
-
-                elif match.group('Angles'):
-                    if verbose:
-                        print 'Parsing Angles...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = map(int, data_lines.pop(i).split())
-                        self.angles[fields[0] - 1] = fields[1:]
-
-                elif match.group('Dihedrals'):
-                    if verbose:
-                        print 'Parsing Dihedrals...'
-                    data_lines.pop(i)
-                    data_lines.pop(i)
-
-                    while i < len(data_lines) and data_lines[i].strip():
-                        fields = map(int, data_lines.pop(i).split())
-                        self.dihedrals[fields[0] - 1] = fields[1:]
-
-                else:
-                    i += 1
-            else:
-                i += 1
+    def load_lammps_data(self, data_file, verbose=False):
+        lmp_data, box = read_lammps_data(data_file)
+        self.xyz = lmp_data['xyz']
+        self.types = lmp_data['types']
+        self.masses = lmp_data['masses']
+        self.charges = lmp_data['charges']
+        self.bonds = lmp_data['bonds']
+        self.angles = lmp_data['angles']
+        self.dihedrals = lmp_data['dihedrals']
+        self.pair_types = lmp_data['pair_types']
+        self.bond_types = lmp_data['bond_types']
+        self.angle_types = lmp_data['angle_types']
+        self.dihedral_types = lmp_data['dihedral_types']
         return box
