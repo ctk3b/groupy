@@ -85,7 +85,7 @@ class Gbb():
         r_gyr_sq /= self.xyz.shape[0]
         self.r_gyr_sq =  r_gyr_sq
 
-    # --- deformations ---
+    # --- manipulations ---
     def translate(self, x=0.0, y=0.0, z=0.0, slow=False):
         """Translate by scalars
         """
@@ -93,10 +93,10 @@ class Gbb():
         self.xyz[:, 1] += y
         self.xyz[:, 2] += z
 
-    def rotate(self, axes=[False, False, False], angles=[0.0, 0.0, 0.0]):
+    def rotate(self, angles=[0.0, 0.0, 0.0]):
         """Rotate around given axes by given angles
         """
-        if axes[0]:
+        if angles[0] != 0.0:
             theta = angles[0]
             T = np.eye(3)
             T[1, 1] = np.cos(theta)
@@ -104,7 +104,7 @@ class Gbb():
             T[2, 1] = np.sin(theta)
             T[2, 2] = np.cos(theta)
             self.xyz = np.dot(self.xyz, T.T)
-        if axes[1]:
+        if angles[1] != 0.0:
             theta = angles[1]
             T = np.eye(3)
             T[0, 0] = np.cos(theta)
@@ -112,7 +112,7 @@ class Gbb():
             T[2, 0] = -np.sin(theta)
             T[2, 2] = np.cos(theta)
             self.xyz = np.dot(self.xyz, T.T)
-        if axes[2]:
+        if angles[2] != 0.0:
             theta = angles[2]
             T = np.eye(3)
             T[0, 0] = np.cos(theta)
