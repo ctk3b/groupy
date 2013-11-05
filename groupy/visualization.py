@@ -28,8 +28,6 @@ a_info_maya = {'C': (2, 1.7),
                'Si': (6, 2.1)}
 
 
-
-
 def splat(xyz, types=None, direction=None):
     """Dump coordinates into 3D plot and show it using matplotlib.
     """

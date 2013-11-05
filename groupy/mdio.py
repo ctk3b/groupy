@@ -301,6 +301,17 @@ def read_lammps_data(data_file, verbose=False):
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = map(int, data_lines.pop(i).split())
                     dihedrals[fields[0] - 1] = fields[1:]
+
+            elif match.group('Impropers'):
+                if verbose:
+                    print 'Parsing Impropers...'
+                data_lines.pop(i)
+                data_lines.pop(i)
+
+                while i < len(data_lines) and data_lines[i].strip():
+                    fields = map(int, data_lines.pop(i).split())
+                    dihedrals[fields[0] - 1] = fields[1:]
+
             else:
                 i += 1
         else:
@@ -334,9 +345,10 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
         f.write(sys_name + '\n')
         f.write('\n')
 
-        n_bonds = gbb.bonds.shape[0]
-        n_angles = gbb.angles.shape[0]
-        n_dihedrals = gbb.dihedrals.shape[0]
+        n_bonds = int(gbb.bonds.shape[0])
+        n_angles = int(gbb.angles.shape[0])
+        n_dihedrals = int(gbb.dihedrals.shape[0])
+        n_impropers = int(gbb.impropers.shape[0])
 
         f.write(str(gbb.xyz.shape[0]) + ' atoms\n')
         f.write(str(n_bonds) + ' bonds\n')
@@ -402,6 +414,13 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
             for i, dihedral in enumerate(gbb.dihedrals):
                 f.write(str(i+1) + " " + " ".join(map(str, dihedral)) + '\n')
 
+        if n_impropers > 0:
+            f.write('\n')
+            f.write('Impropers\n')
+            f.write('\n')
+            for i, improper in enumerate(gbb.impropers):
+                f.write(str(i+1) + " " + " ".join(map(str, improper)) + '\n')
+
     print "Wrote file '" + file_name + "'"
 
 
@@ -418,7 +437,7 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
         f.write(sys_name + '\n')
         f.write(str(gbb.xyz.shape[0]) + '\n')
         for i, coord in enumerate(gbb.xyz):
-            line = ('%5d%-4s%6s%5d%8.3f%8.3f%8.3f\n'
+            f.write('%5d%-4s%6s%5d%8.3f%8.3f%8.3f\n'
                       %(1,
                         'MOL',
                         gbb.types[i],
@@ -427,15 +446,11 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
                         coord[0],
                         coord[1],
                         coord[2]))
-            f.write(line)
-        box = ('%10.5f%10.5f%10.5f\n'
+        f.write('%10.5f%10.5f%10.5f\n'
                %(box[0, 1],
                  box[1, 1],
                  box[2, 1]))
-        f.write(box)
     print "Wrote file '" + grofile + "'"
-
-    #self.atoms.sort(key=operator.attrgetter('moltype'))
 
 
 def write_top(gbb, topfile='system.top'):

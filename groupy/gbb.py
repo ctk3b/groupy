@@ -28,15 +28,17 @@ class Gbb():
         self.xyz = np.empty(shape=(0, 3))
 
         # connectivity
-        self.bonds = np.empty(shape=(0, 3))
-        self.angles = np.empty(shape=(0, 4))
-        self.dihedrals = np.empty(shape=(0, 5))
+        self.bonds = np.empty(shape=(0, 3), dtype='int')
+        self.angles = np.empty(shape=(0, 4), dtype='int')
+        self.dihedrals = np.empty(shape=(0, 5), dtype='int')
+        self.impropers = np.empty(shape=(0, 5), dtype='int')
 
         # forcefield info
         self.pair_types = dict()
         self.bond_types = dict()
         self.angle_types = dict()
         self.dihedral_types = dict()
+        self.improper_types = dict()
 
         # properties
         self.com = float()
