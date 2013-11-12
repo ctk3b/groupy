@@ -28,29 +28,40 @@ a_info_maya = {'C': (2, 1.7),
                'Si': (6, 2.1)}
 
 
-def splat(xyz, types=None, direction=None):
+def splat(xyz, types=None, direction=None, highlight=None, dims=None):
     """Dump coordinates into 3D plot and show it using matplotlib.
     """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-   
+  
     if types is None:
         ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
-        marker='o',
-        s=100)
+                marker='o',
+                s=100)
     else:
         colors = [a_info[x][0] for x in types]
         sizes = [a_info[x][1] for x in types]
         ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
-        c=colors, 
-        marker='o',
-        s=[100 * x ** 3 for x in sizes])
+                c=colors, 
+                marker='o',
+                s=[100 * x ** 3 for x in sizes])
 
-    bounds = [xyz.min(), xyz.max()]
-    ax.set_xlim(bounds)
-    ax.set_ylim(bounds)
-    ax.set_zlim(bounds)
+    if highlight is not None:
+        ax.scatter(xyz[highlight][0], xyz[highlight][1], xyz[highlight][2],
+                marker='D',
+                c='red',
+                s=200)
 
+    if dims is None:
+        bounds = [xyz.min(), xyz.max()]
+        ax.set_xlim(bounds)
+        ax.set_ylim(bounds)
+        ax.set_zlim(bounds)
+    else:
+        ax.set_xlim(dims[0, 0], dims[0, 1])
+        ax.set_ylim(dims[1, 0], dims[1, 1])
+        ax.set_zlim(dims[2, 0], dims[2, 1])
+ 
     if direction is None:
         pass
     else:

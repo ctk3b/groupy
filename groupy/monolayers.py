@@ -89,6 +89,54 @@ def calc_flux(file_name,
     return fluxes_over_time, steps
 
 
+def calc_density(file_name,
+        system_info,
+        planes,
+        area,
+        max_time=np.inf):
+    """Calculate water density along the z-axis
+
+    Args:
+        file_name (str): name of trajectory to read
+        system_info (dict): dictionary containing indices of water atoms
+            Corresponding key must be: 'water'
+        masses (dict):  {atom_type: mass}
+        planes (np.ndarray): z-coords of planes to calculate flux through
+        area (float): surface area of planes
+    Returns:
+        densities_over_time (np.ndarray): densities along z-axis over time
+    """
+    steps = list()
+    masses_over_time = np.empty(shape=(0, len(planes) - 1))
+    with open(file_name, 'r') as trj:
+        step = -1
+        while step < max_time:
+            try:
+                xyz, types, step, _ = read_frame_lammpstrj(trj)
+            except:
+                print "Reached end of '" + file_name + "'"
+                break
+            steps.append(step)
+
+            # select z-coords of water atoms
+            water = xyz[system_info['water']][:, 2]
+
+            masses = np.empty(shape=(1, len(planes) - 1))
+            for i, plane in enumerate(planes[:-1]): # TODO: vectorize
+                # select water atoms in layer
+                n_atoms = len(np.where((water > plane)
+                                     & (water < planes[i+1]))[0])
+
+                # naive averaging, may cause artifacts for small systems
+                # specific to weight of water
+                masses[0, i] = n_atoms / 3 * 18.01
+            masses_over_time = np.vstack((masses_over_time, masses))
+    # convert masses to densities
+    volumes = area * (np.diff(planes))
+    densities_over_time = masses_over_time / volumes
+    return densities_over_time, steps
+
+
 def calc_res_time(file_name,
         system_info,
         top_bounds,

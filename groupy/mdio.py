@@ -465,7 +465,7 @@ def write_top(gbb, topfile='system.top'):
 
         # defaults
         f.write('[ defaults ]\n')
-        f.write('%d%16d%18s%20.4f$8.4f\n'
+        f.write('%d%16d%18s%20.4f%8.4f\n'
                 %(1, 3, 'yes', 1, 1)) #  TODO: options need global storage 
 
         # atomtypes
@@ -481,8 +481,8 @@ def write_top(gbb, topfile='system.top'):
 
             f.write('[ bonds ]\n')
             for bond in gbb.bonds:
-                r = gbb.bond_types[bond][1] 
-                k = gbb.bond_types[bond][2] 
+                r = gbb.bond_types[bond][1]
+                k = gbb.bond_types[bond][2]
                 f.write('%6d%7d%4d%18.8e%18.8e\n'
                         %(bond[2], bond[3], 1, r, k))
 

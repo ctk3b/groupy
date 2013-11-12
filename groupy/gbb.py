@@ -1,6 +1,4 @@
 import numpy as np
-from scipy.spatial.distance import sqeuclidean
-import copy
 
 from groupy.mdio import *
 from groupy.general import *
@@ -222,6 +220,9 @@ class Gbb():
     # --- io ---
     def load_mass(self, file_name):
         self.masses = np.loadtxt(file_name)
+
+    def load_bonds(self, file_name):
+        self.bonds = np.loadtxt(file_name)
 
     def load_xyz(self, file_name):
         self.xyz, self.types = read_xyz(file_name)
