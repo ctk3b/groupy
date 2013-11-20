@@ -17,13 +17,16 @@ class Gbb():
         self.n_bonds = int()
         self.n_angles = int()
         self.n_dihedrals = int()
-        self.mol_id = int()
+
+        self.resids = np.empty(shape=0, dtype='u4')
+        self.resnames = np.empty(shape=0, dtype='str')
 
         # per atom
-        self.types = np.empty(shape=(0, 1), dtype='int')
+        self.types = np.empty(shape=(0, 1))
         self.masses = np.empty(shape=(0, 1))
         self.charges = np.empty(shape=(0, 1))
         self.xyz = np.empty(shape=(0, 3))
+        self.vel = np.empty(shape=(0, 3))
 
         # connectivity
         self.bonds = np.empty(shape=(0, 3), dtype='int')
@@ -41,6 +44,18 @@ class Gbb():
         # properties
         self.com = float()
         self.r_gyr_sq = float()
+
+    def delete_residue(self, i):
+        """Removes all information associated with residue 'i'
+
+        NOTE: currently does not affect connectivity
+        """
+        keep_these = (self.resids != i)
+        self.resids = self.resids[keep_these]
+        self.resnames = self.resnames[keep_these]
+        self.types = self.types[keep_these]
+        self.xyz = self.xyz[keep_these]
+        self.vel = self.vel[keep_these]
 
     # --- calculable properties ---
     def calc_com(self):
@@ -227,6 +242,11 @@ class Gbb():
     def load_xyz(self, file_name):
         self.xyz, self.types = read_xyz(file_name)
         self.n_atoms = self.xyz.shape[0]
+
+    def load_gro(self, file_name):
+        self.resids, self.resnames, self.types, self.xyz, self.vel, box= read_gro(file_name)
+        self.n_atoms = self.xyz.shape[0]
+        return box
 
     def load_lammps_data(self, data_file, verbose=False):
         lmp_data, box = read_lammps_data(data_file)

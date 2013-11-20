@@ -33,7 +33,7 @@ def splat(xyz, types=None, direction=None, highlight=None, dims=None):
     """
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-  
+
     if types is None:
         ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
                 marker='o',
@@ -44,7 +44,7 @@ def splat(xyz, types=None, direction=None, highlight=None, dims=None):
         ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
                 c=colors, 
                 marker='o',
-                s=[100 * x ** 3 for x in sizes])
+                s=[100 * x ** 2 for x in sizes])
 
     if highlight is not None:
         ax.scatter(xyz[highlight][0], xyz[highlight][1], xyz[highlight][2],
@@ -61,7 +61,7 @@ def splat(xyz, types=None, direction=None, highlight=None, dims=None):
         ax.set_xlim(dims[0, 0], dims[0, 1])
         ax.set_ylim(dims[1, 0], dims[1, 1])
         ax.set_zlim(dims[2, 0], dims[2, 1])
- 
+
     if direction is None:
         pass
     else:
