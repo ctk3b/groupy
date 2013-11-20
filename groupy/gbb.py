@@ -42,7 +42,7 @@ class Gbb():
         self.improper_types = dict()
 
         # properties
-        self.com = float()
+        self.com = np.empty(shape=(3))
         self.r_gyr_sq = float()
 
     def delete_residue(self, i):
