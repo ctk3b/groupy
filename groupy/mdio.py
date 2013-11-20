@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 import re
 import pdb
 
@@ -399,7 +400,7 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
             f.write('\n')
             for i, bond in enumerate(gbb.bonds):
                 f.write(str(i+1) + " " + " ".join(map(str, bond)) + '\n')
-        
+
         if n_angles > 0:
             f.write('\n')
             f.write('Angles\n')
@@ -423,6 +424,50 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
 
     print "Wrote file '" + file_name + "'"
 
+def read_gro(file_name):
+    """
+    """
+    if not file_name.endswith('.gro'):
+        warnings.warn("File name passed to read_gro() does not end with '.gro'")
+
+    with open(file_name, 'r') as f:
+        sys_name = f.readline().strip()
+        n_atoms = int(f.readline())
+
+        resids = np.empty(shape=(n_atoms), dtype='u4')
+        resnames = np.empty(shape=(n_atoms), dtype='a5')
+        types = np.empty(shape=(n_atoms), dtype='a5')
+        xyz = np.empty(shape=(n_atoms, 3), dtype='f2')
+        vel = np.empty(shape=(n_atoms, 3), dtype='f2')
+        for i in range(n_atoms):
+            line = f.readline()
+            resids[i] = int(line[:5])
+            resnames[i] = line[5:10].strip()
+            types[i] = line[10:15].strip()
+            xyz[i, 0] = float(line[20:28])
+            xyz[i, 1] = float(line[28:36])
+            xyz[i, 2] = float(line[36:44])
+            try:
+                vel[i, 0] = float(line[44:52])
+                vel[i, 1] = float(line[52:60])
+                vel[i, 2] = float(line[60:68])
+            except:
+                vel[i, 0] = 0.0
+                vel[i, 1] = 0.0
+                vel[i, 2] = 0.0
+
+        box = np.zeros(shape=(3, 2))
+        line = map(float, f.readline().split())
+        if len(line) == 3:
+            box[0, 1] = line[0]
+            box[1, 1] = line[1]
+            box[2, 1] = line[2]
+
+    print "Read file '" + file_name + "'"
+    return resids, resnames, types, xyz, vel, box
+
+
+
 
 def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
     """Write gbb to GROMACS .gro file
@@ -437,15 +482,17 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
         f.write(sys_name + '\n')
         f.write(str(gbb.xyz.shape[0]) + '\n')
         for i, coord in enumerate(gbb.xyz):
-            f.write('%5d%-4s%6s%5d%8.3f%8.3f%8.3f\n'
-                      %(1,
-                        'MOL',
+            f.write('%5d%-4s%6s%5d%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n'
+                      %(gbb.resids[i],
+                        gbb.resnames[i],
                         gbb.types[i],
-                        #gbb.names[i], TODO: implement proper names in gbb
-                        i+1, 
+                        i+1,
                         coord[0],
                         coord[1],
-                        coord[2]))
+                        coord[2],
+                        gbb.vel[i, 0],
+                        gbb.vel[i, 1],
+                        gbb.vel[i, 2]))
         f.write('%10.5f%10.5f%10.5f\n'
                %(box[0, 1],
                  box[1, 1],

@@ -12,7 +12,8 @@ class System():
         self.name = ''
 
         # numbas
-        self.mol_id = int()
+        self.resids = np.empty(shape=0, dtype='int')
+        self.resnames = np.emtpy(shape=0, dtype='str')
 
         # per atom
         self.types = np.empty(shape=(0), dtype='int')
@@ -56,7 +57,7 @@ class System():
             self.bonds = np.vstack((self.bonds, gbb.bonds))
             self.angles = np.vstack((self.angles, gbb.angles))
             self.dihedrals = np.vstack((self.dihedrals, gbb.dihedrals))
-    
+
     def init_atom_kdtree(self):
         """
         """
@@ -78,4 +79,3 @@ class System():
                 break
 
         return neighbors
-       
