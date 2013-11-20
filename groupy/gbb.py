@@ -39,7 +39,7 @@ class Gbb():
         self.improper_types = dict()
 
         # properties
-        self.com = float()
+        self.com = float()   # TODO: this is 3 floats
         self.r_gyr_sq = float()
 
     # --- calculable properties ---
@@ -221,10 +221,22 @@ class Gbb():
     def load_mass(self, file_name):
         self.masses = np.loadtxt(file_name)
 
-    def load_bonds(self, file_name):
+    def load_bond(self, file_name):
         self.bonds = np.loadtxt(file_name)
+	
+	def load_angle(self, file_name):
+		self.angles = np.loadtxt(file_name)
+	
+	def load_dihedral(self, file_name):
+		self.dihedrals = np.loadtxt(file_name)
+	
+	def load_improper(self, file_name):
+		self.impropers = np.loadtxt(file_name)
+	
+	def load_charge(self, file_name):
+		self.charges = np.load_txt(file_name)
 
-    def load_xyz(self, file_name):
+	def load_xyz(self, file_name):   #TODO: this will read an xyz file incorrectly - top 2 lines are headers
         self.xyz, self.types = read_xyz(file_name)
         self.n_atoms = self.xyz.shape[0]
 
