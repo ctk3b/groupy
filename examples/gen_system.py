@@ -14,6 +14,6 @@ pegs[0].translate(0, 0, 50)
 
 sys = System()
 sys.append_gbbs(pegs)
-
+splat(sys.xyz)
 write_xyz('example_outputs/blah.xyz', sys.xyz, sys.types)
 write_lammps_data(sys, box, 'example_outputs/data.blah')

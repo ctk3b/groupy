@@ -6,6 +6,39 @@ import scipy.integrate
 
 from groupy.mdio import *
 
+import pdb
+
+
+def calc_vel_profile(file_name, system_info):
+    """
+    """
+    with open(file_name, 'r') as trj:
+        z_vx = dict.fromkeys(system_info.keys(), np.empty(shape=(0,2)))
+        step = -np.Inf
+        while True:
+            try:
+                xyz, _, step, _ = read_frame_lammpstrj(trj)
+            except:
+                print "Reached end of '" + file_name + "'"
+                break
+            if step % 10000 == 0:
+                print "Read step " + str(step)
+            if step > 0: 
+                for region, indices in system_info.iteritems():
+                    coords = xyz[indices]
+                    prev_coords = prev_xyz[indices]
+                    temp = np.zeros(shape=(coords.shape[0], 2))
+                    # average z
+                    temp[:, 0] = 0.5 * (coords[:, 2] + prev_coords[:, 2])
+                    # x-velocity
+                    temp[:, 1] = ((coords[:, 0] - prev_coords[:, 0]) 
+                            / (step - prev_step))
+                    z_vx[region] = np.vstack((z_vx[region], temp))
+
+            prev_xyz = xyz
+            prev_step = step
+    return z_vx
+                
 
 def calc_film_heights(file_name, system_info):
     """Calculate z-coordinate bounds of top and bottom monolayers.
