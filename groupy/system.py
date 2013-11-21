@@ -32,6 +32,8 @@ class System():
         self.bond_types = dict()
         self.angle_types = dict()
         self.dihedral_types = dict()
+    
+        self.box = box()
 
     def append_gbbs(self, gbbs):
         """
