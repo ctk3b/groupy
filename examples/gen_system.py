@@ -22,7 +22,7 @@ peg.shift_com_to_origin()
 box = Box(100)
 pegs = list()
 
-for i in range(100):
+for i in range(50):
     t_peg = copy.copy(peg)
     t_peg.rotate(180 * np.random.rand(3))
     t_peg.translate(box.length * np.random.rand(3))
