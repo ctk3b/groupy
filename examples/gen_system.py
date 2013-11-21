@@ -1,7 +1,3 @@
-import os
-import pdb
-import random
-
 from groupy.gbb import *
 from groupy.system import *
 from groupy.mdio import *
@@ -32,7 +28,7 @@ for i in range(100):
     t_peg.translate(box.length * np.random.rand(3))
     if can_add(t_peg, pegs, box, 3.0):
         pegs.append(t_peg)
-        print "Added"
+        print "Added " + str(i)
 
 sys = System(box)
 sys.append_gbbs(pegs)
