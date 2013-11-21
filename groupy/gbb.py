@@ -2,7 +2,7 @@ import numpy as np
 
 from groupy.mdio import *
 from groupy.general import *
-
+import copy
 
 class Gbb():
     """Generic building block.
@@ -101,12 +101,16 @@ class Gbb():
         self.r_gyr_sq =  r_gyr_sq
 
     # --- manipulations ---
-    def translate(self, x=0.0, y=0.0, z=0.0, slow=False):
+    def translate(self, xyz=np.zeros(3)):
         """Translate by scalars
         """
-        self.xyz[:, 0] += x
-        self.xyz[:, 1] += y
-        self.xyz[:, 2] += z
+        self.xyz[:, 0] += xyz[0]
+        self.xyz[:, 1] += xyz[1]
+        self.xyz[:, 2] += xyz[2]
+
+    def shift_com_to_origin(self):
+        self.calc_com()
+        self.translate(-self.com)
 
     def rotate(self, angles=[0.0, 0.0, 0.0]):
         """Rotate around given axes by given angles
@@ -238,22 +242,27 @@ class Gbb():
 
     def load_bond(self, file_name):
         self.bonds = np.loadtxt(file_name)
-	
-	def load_angle(self, file_name):
-		self.angles = np.loadtxt(file_name)
-	
-	def load_dihedral(self, file_name):
-		self.dihedrals = np.loadtxt(file_name)
-	
-	def load_improper(self, file_name):
-		self.impropers = np.loadtxt(file_name)
-	
-	def load_charge(self, file_name):
-		self.charges = np.load_txt(file_name)
 
-	def load_xyz(self, file_name):   #TODO: this will read an xyz file incorrectly - top 2 lines are headers
+    def load_angle(self, file_name):
+        self.angles = np.loadtxt(file_name)
+
+    def load_dihedral(self, file_name):
+        self.dihedrals = np.loadtxt(file_name)
+
+    def load_improper(self, file_name):
+        self.impropers = np.loadtxt(file_name)
+
+    def load_charge(self, file_name):
+        self.charges = np.loadtxt(file_name)
+
+    def load_xyz(self, file_name):
         self.xyz, self.types = read_xyz(file_name)
         self.n_atoms = self.xyz.shape[0]
+
+    def load_coord(self, file_name):
+        coords = np.loadtxt(file_name)
+        self.types = coords[:,0]
+        self.xyz = coords[:,1:]
 
     def load_gro(self, file_name):
         self.resids, self.resnames, self.types, self.xyz, self.vel, box= read_gro(file_name)

@@ -1,6 +1,7 @@
 import numpy as np
 from  scipy.spatial import cKDTree
 import pdb
+import math
 
 
 # --- general handy stuff ---
@@ -48,3 +49,27 @@ def get_points_in_range(array, point, radius, max_items=50):
             break
 
     return neighbors
+
+def calc_distance_pbc(point1, point2, box):
+    assert point1.shape == point2.shape
+    assert box.length.shape == point1.shape
+    r_12 = 0.0
+    for i, k in enumerate(point1):
+        diff = k - point2[i]
+        diff -= box.length[i] * anint(diff / box.length[i])
+        r_12 += diff * diff
+    return math.sqrt(r_12)
+
+def calc_distance_sq_pbc(point1, point2, box):
+    assert point1.shape == point2.shape
+    assert box.length.shape == point1.shape
+    r_12 = 0.0
+    for i, k in enumerate(point1):
+        diff = k - point2[i]
+        diff -= box.length[i] * anint(diff / box.length[i])
+        r_12 += diff * diff
+    return r_12
+
+
+
+
