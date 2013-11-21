@@ -1,19 +1,22 @@
 import numpy as np
 from scipy.spatial import cKDTree
+
+from box import *
+
 import pdb
 
 
 class System():
     """System container class
     """
-    def __init__(self):
+    def __init__(self, box=Box(0)):
         """
         """
         self.name = ''
 
         # numbas
         self.resids = np.empty(shape=0, dtype='int')
-        self.resnames = np.emtpy(shape=0, dtype='str')
+        self.resnames = np.empty(shape=0, dtype='str')
 
         # per atom
         self.types = np.empty(shape=(0), dtype='int')
@@ -33,7 +36,7 @@ class System():
         self.angle_types = dict()
         self.dihedral_types = dict()
     
-        self.box = box()
+        self.box = box 
 
     def append_gbbs(self, gbbs):
         """
