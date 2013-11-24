@@ -72,7 +72,7 @@ def read_xyz(file_name):
         return xyz, types
 
 
-def write_xyz(file_name, xyz, types, comment=''):
+def write_xyz(xyz, types, file_name, comment=''):
     """Write an xyz file.
     """
     assert xyz.shape[0] == types.shape[0]

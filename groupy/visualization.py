@@ -42,7 +42,7 @@ def splat(xyz, types=None, direction=None, highlight=None, dims=None):
         colors = [a_info[x][0] for x in types]
         sizes = [a_info[x][1] for x in types]
         ax.scatter(xyz[:, 0], xyz[:, 1], xyz[:, 2],
-                c=colors, 
+                c=colors,
                 marker='o',
                 s=[10 * x ** 3 for x in sizes])
 
@@ -63,11 +63,26 @@ def splat(xyz, types=None, direction=None, highlight=None, dims=None):
         ax.set_ylim(dims[1, 0], dims[1, 1])
         ax.set_zlim(dims[2, 0], dims[2, 1])
 
-    if direction: 
+    if direction is None:
+        pass
+    else:
         assert direction.shape[0] == 3
         # TODO: robust way to choose origin
-        ax.plot([0, 20*direction[0]], [0, 20*direction[1]], [0, 20*direction[2]], 
-            c='k', linewidth=10)
+        zl = xyz[:, 2].argmin()
+        zh = xyz[:, 2].argmax()
+        d = np.linalg.norm(zh - zl)
+        '''
+        ax.plot([xyz[zl, 0], d * direction[0]],
+                [xyz[zl, 1], d * direction[1]],
+                [xyz[zl, 2], d * direction[2]],
+                c='k', linewidth=5)
+        '''
+        ax.plot([0, d * direction[0]],
+                [0, d * direction[1]],
+                [0, d * direction[2]],
+                c='k', linewidth=5)
+
+
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')

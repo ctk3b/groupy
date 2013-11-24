@@ -5,6 +5,7 @@ import scipy.stats
 import scipy.integrate
 
 from groupy.mdio import *
+from groupy.general import *
 
 import pdb
 
@@ -38,7 +39,7 @@ def calc_vel_profile(file_name, system_info):
             prev_xyz = xyz
             prev_step = step
     return z_vx
-                
+
 
 def calc_film_heights(file_name, system_info):
     """Calculate z-coordinate bounds of top and bottom monolayers.
@@ -56,22 +57,25 @@ def calc_film_heights(file_name, system_info):
         bot_bounds (tuple): z-bounds of bot monolayer (min, max)
     """
     with open(file_name, 'r') as trj:
-        heights = np.empty(shape=(2, 0))
+        top_bounds = list()
+        bot_bounds = list()
         while True:
             try:
                 xyz, _, step, _ = read_frame_lammpstrj(trj)
             except:
                 print "Reached end of '" + file_name + "'"
                 break
-            # temp container for z-coords of top, [0], and bottom, [1], films
-            temp_heights = np.empty(shape=(2, len(system_info['botfilm'])))
-            temp_heights[0] = xyz[system_info['topfilm']][:, 2]
-            temp_heights[1] = xyz[system_info['botfilm']][:, 2]
-            heights = np.hstack((heights, temp_heights))
 
-        top_bounds = find_cutoff('top', heights, plot=True)
-        bot_bounds = find_cutoff('bot', heights, plot=True)
-    return top_bounds, bot_bounds
+            # temp container for z-coords of top, [0], and bottom, [1], films
+            heights = np.empty(shape=(2, len(system_info['botfilm'])))
+            heights[0] = xyz[system_info['topfilm']][:, 2]
+            heights[1] = xyz[system_info['botfilm']][:, 2]
+
+            top = find_cutoff('top', heights)
+            bot = find_cutoff('bot', heights)
+            top_bounds.append(top)
+            bot_bounds.append(bot)
+    return np.asarray(top_bounds), np.asarray(bot_bounds)
 
 
 def calc_flux(file_name,
