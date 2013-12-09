@@ -33,4 +33,4 @@ for i in range(50):
 sys = System(box)
 sys.append_gbbs(pegs)
 splat(sys.xyz, sys.types, dims=box.dims)
-write_xyz('example_outputs/random_pegs.xyz', sys.xyz, sys.types)
+write_xyz(sys.xyz, sys.types, 'example_outputs/random_pegs.xyz')

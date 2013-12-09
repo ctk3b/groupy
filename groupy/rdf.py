@@ -79,8 +79,9 @@ def calc_rdf(file_name, pairs=None, n_bins=100, max_frames=np.inf, opencl=False)
 
             # TODO: loop over multiple pairs for pure numpy version
             else:
-                if pairs is None:
-                #if pairs is 'asdfa':
+                #if pairs is None:
+                if pairs is 'asdfa':
+                    # in progress: perform histogram once per frame
                     d = np.zeros(n_atoms * n_atoms)
                     for i, xyz_i in enumerate(xyz):
                         xyz_j = np.vstack([xyz[:i], xyz[i+1:]])
@@ -94,12 +95,9 @@ def calc_rdf(file_name, pairs=None, n_bins=100, max_frames=np.inf, opencl=False)
                     pdb.set_trace()
                     if n_frames == 1:
                         print g_r
-                fast = temp_d
+
                 # all-all
-                #elif pairs is None:
-                slow = temp
                 if pairs is None:
-                #elif pairs is 'asfd':
                     for i, xyz_i in enumerate(xyz):
                         xyz_j = np.vstack([xyz[:i], xyz[i+1:]])
                         d = calc_distance_pbc(xyz_i, xyz_j, box.length)

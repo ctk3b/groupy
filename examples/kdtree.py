@@ -16,7 +16,7 @@ for i in range(4):
             mpc = Gbb()
             box = mpc.load_xyz('example_inputs/mpc.xyz')
             mpc.load_mass('example_inputs/mpc_mass.txt')
-            mpc.translate(i*30, j*30, k*30)
+            mpc.translate([i*30, j*30, k*30])
             # calculate and store all of the centers of mass
             mpc.calc_com()
             centers.append(mpc.com)

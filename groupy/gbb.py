@@ -11,6 +11,7 @@ class Gbb():
         """
         """
         self.name = ''
+        self.mol_id = 1
 
         # numbas
         self.n_atoms = int()
@@ -154,7 +155,7 @@ class Gbb():
                 for k in range(3):  # TODO: vectorize
                     if dim[k] == True:
                         dr = self.xyz[i, k] - self.xyz[0, k]
-                        box_length = np.diff(box[k])
+                        box_length = box.length[k]
                         self.xyz[i, k] -= box_length * anint(dr / box_length)
 
     def wrap(self, box, dim=[True, True, True]):
@@ -164,10 +165,10 @@ class Gbb():
         for i, coords in enumerate(self.xyz):
             for k, c in enumerate(coords):  # TODO: vectorize
                 if dim[k] == True:
-                    if c < box[k, 0]:
-                        self.xyz[i, k] = box[k, 1] - abs(box[k, 0] - c)
-                    elif c > box[k, 1]:
-                        self.xyz[i, k] = box[k, 0] + abs(c - box[k, 1])
+                    if c < box.dims[k, 0]:
+                        self.xyz[i, k] = box.dims[k, 1] - abs(box.dims[k, 0] - c)
+                    elif c > box.dims[k, 1]:
+                        self.xyz[i, k] = box.dims[k, 0] + abs(c - box.dims[k, 1])
 
     def mirror(self, box, dim=[False, False, True], d=0.0, verbose=False):
         """Creates a mirror image of gbb in a given direction.

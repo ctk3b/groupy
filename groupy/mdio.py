@@ -368,9 +368,9 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
             f.write(str(gbb.dihedrals[:, 0].max()) + ' dihedral types\n')
         f.write('\n')
 
-        f.write(str(box[0, 0]) + ' ' + str(box[0, 1]) + ' xlo xhi\n')
-        f.write(str(box[1, 0]) + ' ' + str(box[1, 1]) + ' ylo yhi\n')
-        f.write(str(box[2, 0]) + ' ' + str(box[2, 1]) + ' zlo zhi\n')
+        f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[0, 0], box.dims[0, 1]))
+        f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[1, 0], box.dims[1, 1]))
+        f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[2, 0], box.dims[2, 1]))
 
         f.write('\n')
         f.write('Masses\n')
