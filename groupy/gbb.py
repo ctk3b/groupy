@@ -1,7 +1,7 @@
 import numpy as np
 
-from groupy.mdio import *
-from groupy.general import *
+from mdio import *
+from general import *
 import copy
 
 class Gbb():

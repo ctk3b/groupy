@@ -3,6 +3,8 @@ import warnings
 import re
 import pdb
 
+from box import *
+
 
 def read_frame_lammpstrj(trj, read_velocities=False):
     """Load a frame from a LAMMPS dump file.
@@ -51,9 +53,9 @@ def read_frame_lammpstrj(trj, read_velocities=False):
     # --- end body ---
 
     if read_velocities:
-        return xyz, types, step, box, vxyz
+        return xyz, types, step, Box(box[:, 1], box[:, 0]), vxyz
     else:
-        return xyz, types, step, box
+        return xyz, types, step, Box(box[:, 1], box[:, 0])
 
 
 def read_xyz(file_name):

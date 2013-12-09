@@ -1,8 +1,6 @@
 import numpy as np
 import pdb
 
-from groupy.general import *
-
 
 def calc_director(I):
     """Calculates characteristic vector describing, e.g. a polymer.

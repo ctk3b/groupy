@@ -33,7 +33,7 @@ def calc_angle(u, v, already_normed=True):
     return np.arccos(c) * 180.0 / np.pi
 
 
-# spatial search 
+# spatial search
 def get_points_in_range(array, point, radius, max_items=50):
     """
     """
@@ -51,7 +51,7 @@ def get_points_in_range(array, point, radius, max_items=50):
     return neighbors
 
 def calc_distance_sq_pbc(point1, point2, box):
-    """
+    """Naive squared distance calculation considering minimum image
     """
     assert point1.shape == point2.shape
     assert box.length.shape == point1.shape
@@ -63,7 +63,7 @@ def calc_distance_sq_pbc(point1, point2, box):
     return r_12
 
 def calc_distance_pbc(x0, x1, dimensions):
-    """
+    """Vectorized distance calculation considering minimum image
     """
     d = np.abs(x0 - x1)
     d = np.where(d > 0.5 * dimensions, dimensions - d, d)

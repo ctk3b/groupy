@@ -4,8 +4,8 @@ import scipy as sp
 import scipy.stats
 import scipy.integrate
 
-from groupy.mdio import *
-from groupy.general import *
+from mdio import *
+from general import *
 
 import pdb
 
@@ -24,7 +24,7 @@ def calc_vel_profile(file_name, system_info):
                 break
             if step % 10000 == 0:
                 print "Read step " + str(step)
-            if step > 0: 
+            if step > 0:
                 for region, indices in system_info.iteritems():
                     coords = xyz[indices]
                     prev_coords = prev_xyz[indices]
@@ -32,7 +32,7 @@ def calc_vel_profile(file_name, system_info):
                     # average z
                     temp[:, 0] = 0.5 * (coords[:, 2] + prev_coords[:, 2])
                     # x-velocity
-                    temp[:, 1] = ((coords[:, 0] - prev_coords[:, 0]) 
+                    temp[:, 1] = ((coords[:, 0] - prev_coords[:, 0])
                             / (step - prev_step))
                     z_vx[region] = np.vstack((z_vx[region], temp))
 

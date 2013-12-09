@@ -9,7 +9,7 @@ import pdb
 class System():
     """System container class
     """
-    def __init__(self, box=Box(0)):
+    def __init__(self, box=Box(None)):
         """
         """
         self.name = ''
