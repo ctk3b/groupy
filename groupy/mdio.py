@@ -359,13 +359,13 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
         f.write(str(n_dihedrals) + ' dihedrals\n')
         f.write('\n')
 
-        f.write(str(gbb.types.max()) + ' atom types\n')
+        f.write(str(int(gbb.types.max())) + ' atom types\n')
         if n_bonds > 0:
-            f.write(str(gbb.bonds[:, 0].max()) + ' bond types\n')
+            f.write(str(int(gbb.bonds[:, 0].max())) + ' bond types\n')
         if n_angles > 0:
-            f.write(str(gbb.angles[:, 0].max()) + ' angle types\n')
+            f.write(str(int(gbb.angles[:, 0].max())) + ' angle types\n')
         if n_dihedrals > 0:
-            f.write(str(gbb.dihedrals[:, 0].max()) + ' dihedral types\n')
+            f.write(str(int(gbb.dihedrals[:, 0].max())) + ' dihedral types\n')
         f.write('\n')
 
         f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[0, 0], box.dims[0, 1]))
@@ -379,7 +379,7 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
         # find unique masses and corresponding atomtypes
         masses = set()
         for i, mass in enumerate(gbb.masses):
-            masses.add((gbb.types[i], mass))
+            masses.add((int(gbb.types[i]), mass))
         for mass in sorted(masses):
             f.write(" ".join(map(str, mass)) + '\n')
 
@@ -387,14 +387,17 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
         f.write('Atoms\n')
         f.write('\n')
         for i, coord in enumerate(gbb.xyz):
-            f.write('%-6d %-6d %-6d %5.3f %8.3f %8.3f %8.3f\n'
-                % (i+1,
-                   gbb.mol_id,
-                   gbb.types[i],
-                   gbb.charges[i],
-                   coord[0],
-                   coord[1],
-                   coord[2]))
+            try:
+                f.write('%-6d %-6d %-6d %5.3f %8.3f %8.3f %8.3f\n'
+                    % (i+1,
+                       gbb.resids[i],
+                       gbb.types[i],
+                       gbb.charges[i],
+                       coord[0],
+                       coord[1],
+                       coord[2]))
+            except:
+                pdb.set_trace()
 
         if n_bonds > 0:
             f.write('\n')

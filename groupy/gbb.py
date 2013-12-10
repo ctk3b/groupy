@@ -242,16 +242,16 @@ class Gbb():
         self.masses = np.loadtxt(file_name)
 
     def load_bond(self, file_name):
-        self.bonds = np.loadtxt(file_name)
+        self.bonds = np.loadtxt(file_name, dtype='int')
 
     def load_angle(self, file_name):
-        self.angles = np.loadtxt(file_name)
+        self.angles = np.loadtxt(file_name, dtype='int')
 
     def load_dihedral(self, file_name):
-        self.dihedrals = np.loadtxt(file_name)
+        self.dihedrals = np.loadtxt(file_name, dtype='int')
 
     def load_improper(self, file_name):
-        self.impropers = np.loadtxt(file_name)
+        self.impropers = np.loadtxt(file_name, dtype='int')
 
     def load_charge(self, file_name):
         self.charges = np.loadtxt(file_name)

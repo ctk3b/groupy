@@ -15,7 +15,7 @@ class System():
         self.name = ''
 
         # numbas
-        self.resids = np.empty(shape=0, dtype='int')
+        self.resids = list()
         self.resnames = np.empty(shape=0, dtype='str')
 
         # per atom
@@ -35,8 +35,8 @@ class System():
         self.bond_types = dict()
         self.angle_types = dict()
         self.dihedral_types = dict()
-    
-        self.box = box 
+
+        self.box = box
 
     def append_gbbs(self, gbbs):
         """
@@ -49,19 +49,22 @@ class System():
             if gbb.charges.shape[0] > 0:
                 assert n_new_atoms == gbb.charges.shape[0]
 
-            n_sys_atoms = self.types.shape[0]
+            n_sys_atoms = self.xyz.shape[0]
 
             self.types = np.append(self.types, gbb.types)
             self.masses = np.append(self.masses, gbb.masses)
             self.charges = np.append(self.charges, gbb.charges)
             self.xyz = np.vstack((self.xyz, gbb.xyz))
 
-            gbb.bonds[:, 1:] + n_sys_atoms
-            gbb.angles[:, 1:] + n_sys_atoms
-            gbb.dihedrals[:, 1:] + n_sys_atoms
+            gbb.bonds[:, 1:] += n_sys_atoms
+            gbb.angles[:, 1:] += n_sys_atoms
+            gbb.dihedrals[:, 1:] += n_sys_atoms
+            gbb.impropers[:, 1:] += n_sys_atoms
             self.bonds = np.vstack((self.bonds, gbb.bonds))
             self.angles = np.vstack((self.angles, gbb.angles))
             self.dihedrals = np.vstack((self.dihedrals, gbb.dihedrals))
+            self.impropers = np.vstack((self.impropers, gbb.impropers))
+            self.resids += [gbb.mol_id] * gbb.xyz.shape[0]
 
     def init_atom_kdtree(self):
         """
