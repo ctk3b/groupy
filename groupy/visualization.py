@@ -113,5 +113,5 @@ def splat_maya(xyz, types=None, direction=None):
                 sizes, sizes, sizes, scalars=colors, mode='sphere')
         pts.glyph.color_mode = 'color_by_scalar'
         pts.glyph.glyph_source.glyph_source.center = [0, 0, 0]
-    
+
     mlab.show()

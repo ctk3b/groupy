@@ -3,6 +3,9 @@ import pdb
 
 class Box():
     """Class to hold box information.
+
+    TODO:
+        -functions to update all box properties when one is changed
     """
     def __init__(self, t1, t2=None, t3=None):
         """
@@ -34,3 +37,11 @@ class Box():
         self.dims = np.vstack([self.mins, self.maxs]).T
         self.volume = self.length[0] * self.length[1] * self.length[2]
 
+    def update(self, changed):
+        """
+        """
+        if changed == 'dims':
+            self.mins = self.dims[:, 0]
+            self.maxs = self.dims[:, 1]
+            self.length = self.maxs - self.mins
+            self.volume = self.length[0] * self.length[1] * self.length[2]

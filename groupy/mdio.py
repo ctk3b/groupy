@@ -129,14 +129,16 @@ def read_lammps_data(data_file, verbose=False):
 
         box (numpy.ndarray): box dimensions
     """
-    bonds = np.empty(shape=(0, 3))
-    angles = np.empty(shape=(0, 4))
-    dihedrals = np.empty(shape=(0, 5))
+    bonds = np.empty(shape=(0, 3), dtype='int')
+    angles = np.empty(shape=(0, 4), dtype='int')
+    dihedrals = np.empty(shape=(0, 5), dtype='int')
+    impropers = np.empty(shape=(0, 5), dtype='int')
 
     pair_types = dict()
     bond_types = dict()
     angle_types = dict()
     dihedral_types = dict()
+    improper_types = dict()
 
     print "Reading '" + data_file + "'"
     with open(data_file, 'r') as f:
@@ -144,33 +146,37 @@ def read_lammps_data(data_file, verbose=False):
 
     # TODO: improve robustness of xlo regex
     directives = re.compile(r"""
-        ((?P<n_atoms>\d+\s+atoms)
+        ((?P<n_atoms>\s*\d+\s+atoms)
         |
-        (?P<n_bonds>\d+\s+bonds)
+        (?P<n_bonds>\s*\d+\s+bonds)
         |
-        (?P<n_angles>\d+\s+angles)
+        (?P<n_angles>\s*\d+\s+angles)
         |
-        (?P<n_dihedrals>\d+\s+dihedrals)
+        (?P<n_dihedrals>\s*\d+\s+dihedrals)
         |
         (?P<box>.+xlo)
         |
-        (?P<Masses>Masses)
+        (?P<Masses>\s*Masses)
         |
-        (?P<PairCoeffs>Pair\sCoeffs)
+        (?P<PairCoeffs>\s*Pair\sCoeffs)
         |
-        (?P<BondCoeffs>Bond\sCoeffs)
+        (?P<BondCoeffs>\s*Bond\sCoeffs)
         |
-        (?P<AngleCoeffs>Angle\sCoeffs)
+        (?P<AngleCoeffs>\s*Angle\sCoeffs)
         |
-        (?P<DihedralCoeffs>Dihedral\sCoeffs)
+        (?P<DihedralCoeffs>\s*Dihedral\sCoeffs)
         |
-        (?P<Atoms>Atoms)
+        (?P<ImproperCoeffs>\s*Improper\sCoeffs)
         |
-        (?P<Bonds>Bonds)
+        (?P<Atoms>\s*Atoms)
         |
-        (?P<Angles>Angles)
+        (?P<Bonds>\s*Bonds)
         |
-        (?P<Dihedrals>Dihedrals))
+        (?P<Angles>\s*Angles)
+        |
+        (?P<Dihedrals>\s*Dihedrals)
+        |
+        (?P<Impropers>\s*Impropers))
         """, re.VERBOSE)
 
     i = 0
@@ -201,11 +207,12 @@ def read_lammps_data(data_file, verbose=False):
                 dihedrals = np.empty(shape=(float(fields[0]), 5), dtype='int')
 
             elif match.group('box'):
-                box = np.zeros(shape=(3, 2))
+                dims = np.zeros(shape=(3, 2))
                 for j in range(3):
                     fields = map(float, data_lines.pop(i).split()[:2])
-                    box[j, 0] = fields[0]
-                    box[j, 1] = fields[1]
+                    dims[j, 0] = fields[0]
+                    dims[j, 1] = fields[1]
+                box = Box(dims[:, 1], dims[:, 0])
 
             elif match.group('Masses'):
                 if verbose:
@@ -227,13 +234,25 @@ def read_lammps_data(data_file, verbose=False):
 
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = data_lines.pop(i).split()
-                    a_id = int(fields[0])
-                    types[a_id - 1] = int(fields[2])
-                    masses[a_id - 1] = mass_dict[int(fields[2])]
-                    charges[a_id - 1] = float(fields[3])
-                    xyz[a_id - 1] = np.array([float(fields[4]),
-                                         float(fields[5]),
-                                         float(fields[6])])
+                    if len(fields) == 7:
+                        a_id = int(fields[0])
+                        types[a_id - 1] = int(fields[2])
+                        masses[a_id - 1] = mass_dict[int(fields[2])]
+                        charges[a_id - 1] = float(fields[3])
+                        xyz[a_id - 1] = np.array([float(fields[4]),
+                                             float(fields[5]),
+                                             float(fields[6])])
+
+                    # non-official file format
+                    if len(fields) == 8:
+                        a_id = int(fields[0])
+                        types[a_id - 1] = int(fields[1])
+                        masses[a_id - 1] = mass_dict[int(fields[1])]
+                        charges[a_id - 1] = 0.0
+                        xyz[a_id - 1] = np.array([float(fields[2]),
+                                             float(fields[3]),
+                                             float(fields[4])])
+
 
             elif match.group('PairCoeffs'):
                 if verbose:
@@ -274,6 +293,16 @@ def read_lammps_data(data_file, verbose=False):
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = map(float, data_lines.pop(i).split())
                     dihedral_types[int(fields[0])] = fields[1:]
+
+            elif match.group('ImproperCoeffs'):
+                if verbose:
+                    print 'Parsing Improper Coeffs...'
+                data_lines.pop(i)
+                data_lines.pop(i)
+
+                while i < len(data_lines) and data_lines[i].strip():
+                    fields = map(float, data_lines.pop(i).split())
+                    improper_types[int(fields[0])] = fields[1:]
 
             elif match.group('Bonds'):
                 if verbose:
@@ -327,15 +356,17 @@ def read_lammps_data(data_file, verbose=False):
                 'bonds': bonds,
                 'angles': angles,
                 'dihedrals': dihedrals,
+                'impropers': impropers,
                 'pair_types': pair_types,
                 'bond_types': bond_types,
                 'angle_types': angle_types,
-                'dihedral_types': dihedral_types
+                'dihedral_types': dihedral_types,
+                'improper_types': improper_types
                 }
     return lmp_data, box
 
 
-def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
+def write_lammps_data(gbb, box=None, file_name='data.system', sys_name='system', prototype=False):
     """Write gbb to LAMMPS data file
 
     Args:
@@ -344,6 +375,11 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
         file_name (str): name of output file
         sys_name (str): name printed at top of data file
     """
+    if (box == None) and np.sum(gbb.box.dims) > 0:
+        box = gbb.box
+    elif (box == None):
+        raise Exception("Box is empty")
+
     with open(file_name, 'w') as f:
         f.write(sys_name + '\n')
         f.write('\n')
@@ -368,9 +404,9 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
             f.write(str(int(gbb.dihedrals[:, 0].max())) + ' dihedral types\n')
         f.write('\n')
 
-        f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[0, 0], box.dims[0, 1]))
-        f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[1, 0], box.dims[1, 1]))
-        f.write('%8.4f %8.4f xlo xhi\n' % (box.dims[2, 0], box.dims[2, 1]))
+        f.write('%-8.4f %8.4f xlo xhi\n' % (box.dims[0, 0], box.dims[0, 1]))
+        f.write('%-8.4f %8.4f ylo yhi\n' % (box.dims[1, 0], box.dims[1, 1]))
+        f.write('%-8.4f %8.4f zlo zhi\n' % (box.dims[2, 0], box.dims[2, 1]))
 
         f.write('\n')
         f.write('Masses\n')
@@ -378,54 +414,152 @@ def write_lammps_data(gbb, box, file_name='data.system', sys_name='system'):
 
         # find unique masses and corresponding atomtypes
         masses = set()
+        if prototype:
+            f_mass = open(sys_name + '_mass.txt', 'w')
         for i, mass in enumerate(gbb.masses):
+            if prototype:
+                f_mass.write('%8.4f\n' % (mass))
             masses.add((int(gbb.types[i]), mass))
         for mass in sorted(masses):
             f.write(" ".join(map(str, mass)) + '\n')
+        if prototype:
+            f_mass.close()
 
+        if len(gbb.pair_types) > 0:
+            if prototype:
+                f_pair_type = open(sys_name + '_pair_types.txt', 'w')
+            f.write('\n')
+            f.write('Pair Coeffs\n')
+            f.write('\n')
+            for i, value in sorted(gbb.pair_types.items()):
+                f.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+                if prototype:
+                    f_pair_type.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+            if prototype:
+                f_pair_type.close()
+
+        if len(gbb.bond_types) > 0:
+            if prototype:
+                f_bond_type = open(sys_name + '_bond_types.txt', 'w')
+            f.write('\n')
+            f.write('Bond Coeffs\n')
+            f.write('\n')
+            for i, value in sorted(gbb.bond_types.items()):
+                f.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+                if prototype:
+                    f_bond_type.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+            if prototype:
+                f_bond_type.close()
+
+
+        if len(gbb.angle_types) > 0:
+            if prototype:
+                f_ang_type = open(sys_name + '_angle_types.txt', 'w')
+            f.write('\n')
+            f.write('Angle Coeffs\n')
+            f.write('\n')
+            for i, value in sorted(gbb.angle_types.items()):
+                f.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+                if prototype:
+                    f_ang_type.write("%d %8.4f %8.4f\n" % (i, value[0], value[1]))
+            if prototype:
+                f_ang_type.close()
+
+
+        if len(gbb.dihedral_types) > 0:
+            if prototype:
+                f_dih_type = open(sys_name + '_dihedral_types.txt', 'w')
+            f.write('\n')
+            f.write('Dihedral Coeffs\n')
+            f.write('\n')
+            for i, value in sorted(gbb.dihedral_types.items()):
+                f.write("%d %8.4f %8.4f %8.4f %8.4f\n" % (i, value[0], value[1], value[2], value[3]))
+                if prototype:
+                    f_dih_type.write("%d %8.4f %8.4f %8.4f %8.4f\n" % (i, value[0], value[1], value[2], value[3]))
+            if prototype:
+                f_dih_type.close()
+
+
+
+        if prototype:
+            f_coord = open(sys_name + '_coord.txt', 'w')
+            f_charge = open(sys_name + '_charge.txt', 'w')
         f.write('\n')
         f.write('Atoms\n')
         f.write('\n')
         for i, coord in enumerate(gbb.xyz):
-            try:
-                f.write('%-6d %-6d %-6d %5.3f %8.3f %8.3f %8.3f\n'
-                    % (i+1,
-                       gbb.resids[i],
-                       gbb.types[i],
-                       gbb.charges[i],
-                       coord[0],
-                       coord[1],
-                       coord[2]))
-            except:
-                pdb.set_trace()
+            if len(gbb.resids) > 0:
+                resid = gbb.resids[i]
+            elif len(gbb.resids) == 0:
+                resid = 1
+            f.write('%-6d %-6d %-6d %5.3f %8.3f %8.3f %8.3f\n'
+                % (i+1,
+                   resid,
+                   gbb.types[i],
+                   gbb.charges[i],
+                   coord[0],
+                   coord[1],
+                   coord[2]))
+            if prototype:
+                f_coord.write('%d %8.4f %8.4f %8.4f\n' % (gbb.types[i],
+                    coord[0], coord[1], coord[2]))
+                f_charge.write('%8.4f\n' % (gbb.charges[i]))
+        if prototype:
+            f_coord.close()
+            f_charge.close()
 
         if n_bonds > 0:
+            if prototype:
+                f_bond = open(sys_name + '_bond.txt', 'w')
             f.write('\n')
             f.write('Bonds\n')
             f.write('\n')
             for i, bond in enumerate(gbb.bonds):
                 f.write(str(i+1) + " " + " ".join(map(str, bond)) + '\n')
+                if prototype:
+                    f_bond.write(' '.join(map(str, bond)) + '\n')
+            if prototype:
+                f_bond.close()
 
         if n_angles > 0:
+            if prototype:
+                f_angle = open(sys_name + '_angle.txt', 'w')
             f.write('\n')
             f.write('Angles\n')
             f.write('\n')
             for i, angle in enumerate(gbb.angles):
                 f.write(str(i+1) + " " + " ".join(map(str, angle)) + '\n')
+                if prototype:
+                    f_angle.write(' '.join(map(str, angle)) + '\n')
+            if prototype:
+                f_angle.close()
 
         if n_dihedrals > 0:
+            if prototype:
+                f_dihedral = open(sys_name + '_dihedral.txt', 'w')
             f.write('\n')
             f.write('Dihedrals\n')
             f.write('\n')
             for i, dihedral in enumerate(gbb.dihedrals):
                 f.write(str(i+1) + " " + " ".join(map(str, dihedral)) + '\n')
+                if prototype:
+                    f_dihedral.write(' '.join(map(str, dihedral)) + '\n')
+            if prototype:
+                f_dihedral.close()
 
         if n_impropers > 0:
+            if prototype:
+                f_dihedral = open(sys_name + '_dihedral.txt', 'w')
             f.write('\n')
             f.write('Impropers\n')
             f.write('\n')
             for i, improper in enumerate(gbb.impropers):
                 f.write(str(i+1) + " " + " ".join(map(str, improper)) + '\n')
+                if prototype:
+                    f_dihedral.write(' '.join(map(str, dihedral)) + '\n')
+
+            if prototype:
+                f_dihedral.close()
 
     print "Wrote file '" + file_name + "'"
 

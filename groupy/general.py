@@ -32,6 +32,15 @@ def calc_angle(u, v, already_normed=True):
         c = np.dot(u, v) / np.linalg.norm(u) / np.linalg.norm(v)
     return np.arccos(c) * 180.0 / np.pi
 
+def can_add(gbb, gbb_list, box, r_cut):
+    """
+    """
+    for test_atom in gbb.xyz:
+        for item in gbb_list:
+            r_ij = calc_distance_pbc(item.xyz, test_atom, box.maxs)
+            if (r_ij < r_cut).any():
+                return False
+    return True
 
 # spatial search
 def get_points_in_range(array, point, radius, max_items=50):

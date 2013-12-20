@@ -238,6 +238,28 @@ class Gbb():
         """
 
     # --- io ---
+    def load_prototypes(self, base_name, prototypes):
+        if 'mass' in prototypes:
+            self.load_mass(base_name + '_mass.txt')
+        if 'charge' in prototypes:
+            self.load_charge(base_name + '_charge.txt')
+        if 'coord' in prototypes:
+            self.load_coord(base_name + '_coord.txt')
+        if 'bond' in prototypes:
+            self.load_bond(base_name + '_bond.txt')
+        if 'angle' in prototypes:
+            self.load_angle(base_name + '_angle.txt')
+        if 'dihedral' in prototypes:
+            self.load_dihedral(base_name + '_dihedral.txt')
+        if 'pair_types' in prototypes:
+            self.load_pair_types(base_name + '_pair_types.txt')
+        if 'bond_types' in prototypes:
+            self.load_bond_types(base_name + '_bond_types.txt')
+        if 'angle_types' in prototypes:
+            self.load_angle_types(base_name + '_angle_types.txt')
+        if 'dihedral_types' in prototypes:
+            self.load_dihedral_types(base_name + '_dihedral_types.txt')
+
     def load_mass(self, file_name):
         self.masses = np.loadtxt(file_name)
 
@@ -253,6 +275,26 @@ class Gbb():
     def load_improper(self, file_name):
         self.impropers = np.loadtxt(file_name, dtype='int')
 
+    def load_pair_types(self, file_name):
+        data = np.loadtxt(file_name)
+        self.pair_types = dict(zip(data[:, 0].astype(int), 
+            zip(data[:, 1], data[:, 2])))
+
+    def load_bond_types(self, file_name):
+        data = np.loadtxt(file_name)
+        self.bond_types = dict(zip(data[:, 0].astype(int), 
+            zip(data[:, 1], data[:, 2])))
+
+    def load_angle_types(self, file_name):
+        data = np.loadtxt(file_name)
+        self.angle_types = dict(zip(data[:, 0].astype(int), 
+            zip(data[:, 1], data[:, 2])))
+
+    def load_dihedral_types(self, file_name):
+        data = np.loadtxt(file_name)
+        self.dihedral_types = dict(zip(data[:, 0].astype(int), 
+            zip(data[:, 1], data[:, 2], data[:, 3], data[:, 4])))
+
     def load_charge(self, file_name):
         self.charges = np.loadtxt(file_name)
 
@@ -262,8 +304,8 @@ class Gbb():
 
     def load_coord(self, file_name):
         coords = np.loadtxt(file_name)
-        self.types = coords[:,0]
-        self.xyz = coords[:,1:]
+        self.types = coords[:, 0].astype(int)
+        self.xyz = coords[:, 1:]
 
     def load_gro(self, file_name):
         self.resids, self.resnames, self.types, self.xyz, self.vel, box= read_gro(file_name)
