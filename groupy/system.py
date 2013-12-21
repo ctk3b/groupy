@@ -152,6 +152,7 @@ class System():
             self.masses = np.append(self.masses, gbb.masses)
             self.charges = np.append(self.charges, gbb.charges)
             self.xyz = np.vstack((self.xyz, gbb.xyz))
+            self.n_molecules += 1
 
     def init_atom_kdtree(self):
         """

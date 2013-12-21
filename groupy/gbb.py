@@ -46,6 +46,20 @@ class Gbb():
         self.com = np.empty(shape=(3))
         self.r_gyr_sq = float()
 
+    def delete_ions(self, ids):
+        """Removes all information associated selected indices
+
+        NOTE: this does not affect connectivity and is therefore
+            only really useful for particles not bonded to anything
+        """
+        self.types = np.delete(self.types, ids)
+        self.charges = np.delete(self.charges, ids)
+        self.masses = np.delete(self.masses, ids)
+        self.xyz = np.delete(self.xyz, ids, 0)
+        if self.vel.shape[0] > 0:
+            self.vel = np.delete(self.vel, ids, 0)
+
+
     def delete_residue(self, i):
         """Removes all information associated with residue 'i'
 
