@@ -492,7 +492,7 @@ def write_lammps_data(gbb, box=None, file_name='data.system', sys_name='system',
                 resid = gbb.resids[i]
             elif len(gbb.resids) == 0:
                 resid = 1
-            f.write('%-6d %-6d %-6d %5.3f %8.3f %8.3f %8.3f\n'
+            f.write('%-6d %-6d %-6d %5.8f %8.3f %8.3f %8.3f\n'
                 % (i+1,
                    resid,
                    gbb.types[i],

@@ -50,14 +50,13 @@ class Gbb():
         """Removes all information associated selected indices
 
         NOTE: does not work for particles bonded to anything
-            
         """
         ids_1 = ids + 1  # 1-indexed list for atom numbering
         atom_map = dict()
         count = 1
         for i in range(1, self.xyz.shape[0] + 1):
             if i in ids_1:
-                pass 
+                pass
             else:
                 atom_map[i] = count
                 count += 1

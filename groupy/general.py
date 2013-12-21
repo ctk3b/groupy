@@ -49,7 +49,7 @@ def can_add(gbb, gbb_list, box, r_cut):
                 return False
     return True
 
-def add_to_box(gbb, gbb_list, n, box, r_cut=2.0, name='gbb'):
+def add_to_box(gbb, gbb_list, n, box, dims=[True, True, True], r_cut=2.0, name='gbb'):
     """
     """
     added = list()
@@ -63,7 +63,7 @@ def add_to_box(gbb, gbb_list, n, box, r_cut=2.0, name='gbb'):
         t_gbb.translate([x, y, z])
         t_gbb.calc_com()
         if can_add(t_gbb, added + gbb_list, box, r_cut):
-            t_gbb.wrap(box)
+            t_gbb.wrap(box, dims)
             added.append(t_gbb)
             if len(added) % 100 == 0:
                 print "Added {0} #{1}".format(name, len(added))
