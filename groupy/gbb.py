@@ -49,9 +49,40 @@ class Gbb():
     def delete_ions(self, ids):
         """Removes all information associated selected indices
 
-        NOTE: this does not affect connectivity and is therefore
-            only really useful for particles not bonded to anything
+        NOTE: does not work for particles bonded to anything
+            
         """
+        ids_1 = ids + 1  # 1-indexed list for atom numbering
+        atom_map = dict()
+        count = 1
+        for i in range(1, self.xyz.shape[0] + 1):
+            if i in ids_1:
+                pass 
+            else:
+                atom_map[i] = count
+                count += 1
+
+        for bond in self.bonds:
+            bond[1] = atom_map[bond[1]]
+            bond[2] = atom_map[bond[2]]
+
+        for angle in self.angles:
+            angle[1] = atom_map[angle[1]]
+            angle[2] = atom_map[angle[2]]
+            angle[3] = atom_map[angle[3]]
+
+        for dihedral in self.dihedrals:
+            dihedral[1] = atom_map[dihedral[1]]
+            dihedral[2] = atom_map[dihedral[2]]
+            dihedral[3] = atom_map[dihedral[3]]
+            dihedral[4] = atom_map[dihedral[4]]
+
+        for improper in self.impropers:
+            improper[1] = atom_map[improper[1]]
+            improper[2] = atom_map[improper[2]]
+            improper[3] = atom_map[improper[3]]
+            improper[4] = atom_map[improper[4]]
+
         self.types = np.delete(self.types, ids)
         self.charges = np.delete(self.charges, ids)
         self.masses = np.delete(self.masses, ids)
