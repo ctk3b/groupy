@@ -39,7 +39,7 @@ class System():
 
         self.box = box
 
-    def append_gbbs(self, gbbs):
+    def append_gbbs(self, gbbs, update_FF=True):
         """
         """
         for n_mols, gbb in enumerate(gbbs):
@@ -82,7 +82,7 @@ class System():
                 n_improper_types = 0
 
             # update FF info for first molecule
-            if n_mols == 0:
+            if (n_mols == 0) and (update_FF == True):
                 # ---update numbering of pair coeffs
                 convert_atoms = dict()
                 for key, value in gbb.pair_types.items():

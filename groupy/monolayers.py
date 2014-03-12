@@ -1,13 +1,16 @@
+from collections import defaultdict
+import pdb
+
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy import linspace
 import scipy as sp
 import scipy.stats
 import scipy.integrate
+from scitools.numpyutils import meshgrid
 
-from mdio import *
-from general import *
-
-import pdb
+from mdio import read_frame_lammpstrj
+from general import find_nearest
 
 
 def calc_vel_profile(file_name, system_info):
@@ -72,17 +75,13 @@ def calc_film_heights(file_name, system_info):
             heights[1] = xyz[system_info['botfilm']][:, 2]
 
             top = find_cutoff('top', heights)
-            bot = find_cutoff('bot', heights)
+            bot = find_cutoff('bot', heights, plot=True)
             top_bounds.append(top)
             bot_bounds.append(bot)
     return np.asarray(top_bounds), np.asarray(bot_bounds)
 
 
-def calc_flux(file_name,
-        system_info,
-        planes,
-        area,
-        max_time=np.inf):
+def calc_flux(file_name, system_info, planes, area, max_time=np.inf):
     """Calculate fluxes of water across multiple x-y planes.
 
     Args:
@@ -126,62 +125,106 @@ def calc_flux(file_name,
     return fluxes_over_time, steps
 
 
-def calc_density(file_name,
-        system_info,
-        planes,
-        area,
-        max_time=np.inf):
-    """Calculate water density along the z-axis
+def calc_density(file_name, system_info, group, masses, axis, planes,
+        area, max_frames=np.inf):
+    """Calculate density along a specified axis.
 
     Args:
         file_name (str): name of trajectory to read
-        system_info (dict): dictionary containing indices of water atoms
-            Corresponding key must be: 'water'
+        system_info (dict): dictionary containing indices of groups in system
+        group (list): list of keys in system_info
         masses (dict):  {atom_type: mass}
-        planes (np.ndarray): z-coords of planes to calculate flux through
-        area (float): surface area of planes
+        axis (int): axis along which to calculate density
+        planes (np.ndarray): coords of planes to calculate flux through
+        area (float): area of plane normal to specified axis
+        max_frames (int): maximum number of frames to read
     Returns:
-        densities_over_time (np.ndarray): densities along z-axis over time
+        densities_over_time (np.ndarray): densities along axis over time
     """
-    steps = list()
-    masses_over_time = np.empty(shape=(0, len(planes) - 1))
+    if max_frames == np.inf:
+        densities_over_time = np.empty(len(planes) - 1)
+    else:
+        densities_over_time = np.empty(shape=(max_frames, len(planes) - 1))
+
     with open(file_name, 'r') as trj:
         step = -1
-        while step < max_time:
+        while step < max_frames - 1:
             try:
-                xyz, types, step, _ = read_frame_lammpstrj(trj)
+                xyz, types, time_step, box = read_frame_lammpstrj(trj)
             except:
-                print "Reached end of '" + file_name + "'"
+                print "Reached end of '{0}'".format(file_name)
                 break
-            steps.append(step)
+            step += 1
+            print "Read frame #{0}".format(step)
+            planes[0] = box.mins[0]
+            planes[-1] = box.maxs[0]
 
-            # select z-coords of water atoms
-            water = xyz[system_info['water']][:, 2]
+            # select coords of relevant atoms along specified axis
+            # TODO: multiple groups
+            selected = xyz[system_info[group]][:, axis]
+            selected_types = types[system_info[group]]
 
-            masses = np.empty(shape=(1, len(planes) - 1))
-            for i, plane in enumerate(planes[:-1]): # TODO: vectorize
-                # select water atoms in layer
-                n_atoms = len(np.where((water > plane)
-                                     & (water < planes[i+1]))[0])
+            volumes = area * (np.diff(planes))
 
-                # naive averaging, may cause artifacts for small systems
-                # specific to weight of water
-                masses[0, i] = n_atoms / 3 * 18.01
-            masses_over_time = np.vstack((masses_over_time, masses))
-    # convert masses to densities
-    volumes = area * (np.diff(planes))
-    densities_over_time = masses_over_time / volumes
-    return densities_over_time, steps
+            if max_frames == np.inf:
+                temp_masses = np.empty(len(planes) - 1)
+            for i, plane in enumerate(planes[:-1]):
+                # select atoms in layer
+                atoms_in_layer = np.where((selected > plane)
+                                     & (selected < planes[i+1]))[0]
+                types_in_layer = selected_types[atoms_in_layer]
+                # TODO: REMOVE HARDCODED TYPE OFFSET
+                mass_in_layer = np.sum(masses[types_in_layer - 20])
+                if max_frames == np.inf:
+                    temp_masses[i] = mass_in_layer / volumes[i]
+                else:
+                    densities_over_time[step, i] = mass_in_layer / volumes[i]
+            if max_frames == np.inf:
+                densities_over_time = np.hstack((densities_over_time, temp_masses))
+    return densities_over_time
+
+def slab_density(file_name, system_info, group, masses, type_offset, axis,
+        planes, area, max_frames=np.inf):
+    """Calculate density in a slab.
+    """
+    with open(file_name, 'r') as trj:
+        step = -1
+        while step < max_frames - 1:
+            try:
+                xyz, types, time_step, box = read_frame_lammpstrj(trj)
+            except:
+                print "Reached end of '{0}'".format(file_name)
+                break
+            step += 1
+            print "Read frame #{0}".format(step)
+            planes[0] = box.mins[0]
+            planes[-1] = box.maxs[0]
+
+            # select coords of relevant atoms along specified axis
+            selected = xyz[system_info[group]][:, axis]
+            selected_types = types[system_info[group]]
+
+            volumes = area * (np.diff(planes))
+
+            if max_frames == np.inf:
+                temp_masses = np.empty(len(planes) - 1)
+            for i, plane in enumerate(planes[:-1]):
+                # select atoms in layer
+                atoms_in_layer = np.where((selected > plane)
+                                     & (selected < planes[i+1]))[0]
+                types_in_layer = selected_types[atoms_in_layer]
+                mass_in_layer = np.sum(masses[types_in_layer - type_offset])
+                if max_frames == np.inf:
+                    temp_masses[i] = mass_in_layer / volumes[i]
+                else:
+                    densities_over_time[step, i] = mass_in_layer / volumes[i]
+            if max_frames == np.inf:
+                densities_over_time = np.hstack((densities_over_time, temp_masses))
+    return densities_over_time
 
 
-def calc_res_time(file_name,
-        system_info,
-        top_bounds,
-        bot_bounds,
-        slab,
-        max_time=np.inf,
-        return_data=False,
-        plot=False):
+def calc_res_time(file_name, system_info, top_bounds, bot_bounds, slab,
+        max_time=np.inf, return_data=False, plot=False):
     """Calculate residence time of water molecules in monolayers.
 
     Args:
@@ -319,13 +362,146 @@ def find_cutoff(film, heights, plot=False):
 
     if plot:
         fig, ax1 = plt.subplots()
+        ax1.set_xlabel(u'z (\u00c5)')
+        ax1.set_ylabel('Count')
         ax1.hist(heights[i], color='green')
         ax1.vlines(z[idx], 0, 350, linewidth=3)
 
         ax2 = ax1.twinx()
+        ax2.set_ylabel('Cumulative distribution function')
         ax2.plot(z, cdf, color='blue', linewidth=3)
         pdf = sp.stats.rayleigh.pdf(z, loc=param[0], scale=param[1])
         ax2.plot(z, pdf, color='red', linewidth=3)
 
         fig.savefig(film + '_film_thickness.pdf', bbox_inches='tight')
     return film_bounds
+
+
+def voxel_density(file_name, system_info, box, n_grid=[50, 50, 10], z_bounds=[], max_time=np.Inf):
+    """
+    """
+
+    count = defaultdict(int)
+    n_frames = 0
+    x_min = box.mins[0]
+    x_max = box.maxs[0]
+    y_min = box.mins[1]
+    y_max = box.maxs[1]
+    z_min = z_bounds[0]
+    z_max = z_bounds[1]
+
+    xs = linspace(x_min, x_max, n_grid[0])
+    ys = linspace(y_min, y_max, n_grid[1])
+    zs = linspace(z_min, z_max, n_grid[2])
+
+    vol = (x_max-x_min) * (y_max-y_min) * (z_max-z_min)
+    vol_per_voxel = vol / np.prod(n_grid)
+    print 'Volume of voxel: {0}'.format(vol_per_voxel)
+
+    units = 1.660538  # au/ang^3 to g/cm^3
+    mass_per_volume = {1: 1.008 / vol_per_voxel * units,
+            2: 14.007 / vol_per_voxel * units,
+            3: 12.011 / vol_per_voxel * units,
+            4: 12.011 / vol_per_voxel * units,
+            5: 1.008 / vol_per_voxel * units,
+            6: 12.011 / vol_per_voxel * units,
+            7: 1.008 / vol_per_voxel * units,
+            8: 15.999 / vol_per_voxel * units,
+            9: 30.974 / vol_per_voxel * units,
+            10: 15.990 / vol_per_voxel * units,
+            11: 12.011 / vol_per_voxel * units,
+            12: 15.999 / vol_per_voxel * units,
+            13: 12.011 / vol_per_voxel * units,
+            14: 15.999 / vol_per_voxel * units,
+            15: 12.011 / vol_per_voxel * units,
+            16: 12.011 / vol_per_voxel * units,
+            17: 1.008 / vol_per_voxel * units,
+            18: 12.011 / vol_per_voxel * units,
+            19: 15.999 / vol_per_voxel * units,
+            20: 1.008 / vol_per_voxel * units,
+            21: 28.085 / vol_per_voxel * units,
+            22: 28.085 / vol_per_voxel * units,
+            23: 15.999 / vol_per_voxel * units,
+            24: 1.008 / vol_per_voxel * units,
+            25: 28.085 / vol_per_voxel * units,
+            26: 15.999 / vol_per_voxel * units,
+            27: 15.999 / vol_per_voxel * units,
+            28: 1.008 / vol_per_voxel * units}
+
+    with open(file_name, 'r') as trj:
+        step = -np.Inf
+        while step < max_time:
+            try:
+                xyz, types, _, box = read_frame_lammpstrj(trj)
+            except:
+                print "Reached end of '" + file_name + "'"
+                break
+            n_frames += 1
+
+            #all_water = xyz[system_info['water']]
+            #water_ids = np.where((all_water[:, 2] > z_min) & (all_water[:, 2] < z_max))
+            #water = all_water[water_ids]
+            bounded_ids = np.where((xyz[:, 2] > z_min) & (xyz[:, 2] < z_max))
+            bounded_atoms = xyz[bounded_ids]
+
+            #all_water_types = types[system_info['water']]
+            #water_types = all_water_types[water_ids]
+            bounded_types = types[bounded_ids]
+
+            for atom, a_type in zip(bounded_atoms, bounded_types):
+                # wrap coord if necessary
+                for k, c in enumerate(atom):
+                    if c < box.dims[k, 0]:
+                        atom[k] = box.dims[k, 1] - abs(box.dims[k, 0] - c)
+                    elif c > box.dims[k, 1]:
+                        atom[k] = box.dims[k, 0] + abs(c - box.dims[k, 1])
+                x = np.where(np.histogram([atom[0]], bins=xs)[0] ==  1)[0][0]
+                y = np.where(np.histogram([atom[1]], bins=ys)[0] ==  1)[0][0]
+                z = np.where(np.histogram([atom[2]], bins=zs)[0] ==  1)[0][0]
+
+                count[(x, y, z)] += mass_per_volume[a_type]
+
+    for voxel, density in count.items():
+        count[voxel] = density / n_frames
+    return count, vol_per_voxel
+
+
+def pore_distribution(file_name,
+        system_info,
+        groups,
+        bounds,
+        n_bins=100,
+        max_time=np.inf):
+    """Calculate distribution of species across 2D pore
+
+    Args:
+        file_name (str): name of trajectory to read
+        system_info (dict): dictionary containing indices of water atoms
+            Corresponding key must be: 'water'
+        groups (dict): dictionary of types that should be treated as a group
+    Returns:
+        densities_over_time (np.ndarray): densities along z-axis over time
+    """
+
+    counts = dict()
+    for group in groups:
+        counts[group], edges = np.histogram([0], bins=n_bins, range=(bounds[0], bounds[1]))
+        counts[group][0] = 0
+
+    print "Reading '" + file_name + "'"
+    with open(file_name, 'r') as trj:
+        step = -1
+        while step < max_time:
+            try:
+                xyz, _, step, _ = read_frame_lammpstrj(trj)
+            except:
+                print "Reached end of '" + file_name + "'"
+                break
+
+            for group in groups:
+                temp_xyz = xyz[system_info[group]][:, 2]
+                temp, _ = np.histogram(temp_xyz, bins=n_bins, range=(bounds[0], bounds[1]))
+                counts[group] += temp
+
+    return counts, edges
+

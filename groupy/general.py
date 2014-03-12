@@ -1,11 +1,15 @@
-import numpy as np
-from  scipy.spatial import cKDTree
+"""General, handy functions."""
+
 import pdb
 import math
 import copy
 
+import numpy as np
+from  scipy.spatial import cKDTree
 
-# --- general handy stuff ---
+from groupy.box import Box
+
+
 def find_nearest(array, target):
     """Find array component whose numeric value is closest to 'target'.
     """
@@ -24,7 +28,7 @@ def anint(x):
         return 0.
 
 
-def calc_angle(u, v, already_normed=True):
+def calc_angle(u, v, already_normed=False):
     """Compute the angle between 2 vectors
     """
     if already_normed:
@@ -65,7 +69,8 @@ def add_to_box(gbb, gbb_list, n, box, dims=[True, True, True], r_cut=2.0, name='
         if can_add(t_gbb, added + gbb_list, box, r_cut):
             t_gbb.wrap(box, dims)
             added.append(t_gbb)
-            if len(added) % 100 == 0:
+            # brief update message every 10th of the way there
+            if len(added) % (n/10) == 0:
                 print "Added {0} #{1}".format(name, len(added))
     return added
 

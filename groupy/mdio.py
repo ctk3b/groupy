@@ -1,9 +1,10 @@
-import numpy as np
 import warnings
 import re
 import pdb
 
-from box import *
+import numpy as np
+
+from box import Box
 
 
 def read_frame_lammpstrj(trj, read_velocities=False):
@@ -59,8 +60,8 @@ def read_frame_lammpstrj(trj, read_velocities=False):
 
 
 def read_xyz(file_name):
-    """Load an xyz file into a coordinate and a type array.
-    """
+    """Load an xyz file into a coordinate and a type array."""
+
     with open(file_name, 'r') as f:
         n_atoms = int(f.readline())  # num atoms
         f.readline()  # discard comment line
@@ -75,8 +76,8 @@ def read_xyz(file_name):
 
 
 def write_xyz(xyz, types, file_name, comment=''):
-    """Write an xyz file.
-    """
+    """Write an xyz file."""
+
     assert xyz.shape[0] == types.shape[0]
 
     with open(file_name, 'w') as f:
@@ -242,6 +243,16 @@ def read_lammps_data(data_file, verbose=False):
                         xyz[a_id - 1] = np.array([float(fields[4]),
                                              float(fields[5]),
                                              float(fields[6])])
+
+                    if len(fields) == 10:
+                        a_id = int(fields[0])
+                        types[a_id - 1] = int(fields[2])
+                        masses[a_id - 1] = mass_dict[int(fields[2])]
+                        charges[a_id - 1] = float(fields[3])
+                        xyz[a_id - 1] = np.array([float(fields[4]),
+                                             float(fields[5]),
+                                             float(fields[6])])
+                        # TODO: store image flags?
 
                     # non-official file format
                     if len(fields) == 8:
@@ -492,7 +503,7 @@ def write_lammps_data(gbb, box=None, file_name='data.system', sys_name='system',
                 resid = gbb.resids[i]
             elif len(gbb.resids) == 0:
                 resid = 1
-            f.write('%-6d %-6d %-6d %5.8f %8.3f %8.3f %8.3f\n'
+            f.write('%-6d %-6d %-6d %5.12f %8.3f %8.3f %8.3f\n'
                 % (i+1,
                    resid,
                    gbb.types[i],

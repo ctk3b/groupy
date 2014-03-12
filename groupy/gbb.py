@@ -1,8 +1,10 @@
+import copy
+
 import numpy as np
 
-from mdio import *
-from general import *
-import copy
+from mdio import read_gro, read_xyz, read_lammps_data
+from general import anint
+
 
 class Gbb():
     """Generic building block.
@@ -352,7 +354,7 @@ class Gbb():
         self.xyz = coords[:, 1:]
 
     def load_gro(self, file_name):
-        self.resids, self.resnames, self.types, self.xyz, self.vel, box= read_gro(file_name)
+        self.resids, self.resnames, self.types, self.xyz, self.vel, box=read_gro(file_name)
         self.n_atoms = self.xyz.shape[0]
         return box
 
@@ -369,4 +371,6 @@ class Gbb():
         self.bond_types = lmp_data['bond_types']
         self.angle_types = lmp_data['angle_types']
         self.dihedral_types = lmp_data['dihedral_types']
+
+        self.n_atoms = self.xyz.shape[0]
         return box
