@@ -3,8 +3,6 @@ from scipy.spatial import cKDTree
 
 from box import *
 
-import pdb
-
 
 class System():
     """System container class - used for printing data files

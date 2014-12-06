@@ -403,13 +403,65 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
         f.write('%d impropers\n' % n_impropers)
         f.write('\n')
 
+        # TODO: add in masses list
         # number of unique each thing
         if ff_param_set == 'gromos53a6':
-            f.write('56 atom types\n')
-            f.write('52 bond types\n')
-            f.write('54 angle types\n')
+            f.write('58 atom types\n')
+            f.write('53 bond types\n')
+            f.write('55 angle types\n')
             f.write('41 dihedral types\n')
             f.write('3 improper types\n')
+            mO = 15.9994
+            mN = 14.0067
+            mC = 12.0110
+            mH = 1.0080
+            mS = 32.060
+            mCu = 63.546
+            mFe = 55.847
+            mZn = 65.37
+            mMg = 24.305
+            mCa = 40.08
+            mP = 30.9738
+            mAr = 39.948
+            mF = 18.9984
+            mCl = 35.435
+            mBr = 79.904
+            mCH4 = 16.043
+            mCH3 = 15.035
+            mCH2 = 14.027
+            mCH1 = 13.019
+            mNa = 22.9898
+            mSi = 28.08
+            mDum = 0.000
+            type_mass = {17: 16.043, 26: mFe, 27: mZn, 28: mMg, 29: mCa, 30: mP,
+                    34: mBr, 37: mNa, 31: mAr, 54: mSi}
+            lazy = []
+            lazy.append([mO, 1, 2, 3, 4, 5, 36, 44, 50, 52, 57])
+            lazy.append([mN, 6, 7, 8, 9, 10, 11, 53])
+            lazy.append([mC, 12, 13, 39, 45, 48, 51])
+            lazy.append([mCH1, 14, 19])
+            lazy.append([mCH2, 15, 18, 49])
+            lazy.append([mCH3, 16, 35, 43])
+            lazy.append([mH, 20, 21, 41, 58])
+            lazy.append([mS, 23, 42])
+            lazy.append([mCu, 24, 25])
+            lazy.append([mF, 32, 47])
+            lazy.append([mCl, 33, 38, 40, 46])
+            lazy.append([mDum, 22, 55, 56])
+            for element in lazy:
+                for atype in element[1:]:
+                    type_mass[atype] = element[0]
+
+            # now check that these are the same as in the system gbbs
+            import pdb
+            for atype in system.type_mass.keys():
+                if type_mass[atype] != system.type_mass[atype]:
+                    warn_message = "Warning: atom type %d " % atype
+                    warn_message += "given different masses in prototype "
+                    warn_message += "and %s force field. " % ff_param_set
+                    warn_message += "Using masses given in prototype."
+                    type_mass[atype] = system.type_mass[atype]
+                    print(warn_message)
 
         else:
             f.write('%d atom types\n' % max(system.unique_atom_types))
