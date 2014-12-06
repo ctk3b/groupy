@@ -376,8 +376,134 @@ def read_lammps_data(data_file, verbose=False):
                 }
     return lmp_data, box
 
+def write_lammpsdata(system, box, filename='groupy.lammpsdata',
+        atom_style='full', sys_name=None, ff_param_set=None):
+    """Write a lammpsdata file with a given format. 
 
-def write_lammps_data(gbb, box=None, file_name='data.system', sys_name='system', prototype=False):
+    """
+    if not sys_name:
+        sys_name = 'created with groupy'
+
+    # figure out the number of different things
+    n_atoms = len(system.xyz)
+    n_bonds = len(system.bonds)
+    n_angles = len(system.angles)
+    n_dihedrals = len(system.dihedrals)
+    n_impropers = len(system.impropers)
+
+    with open(filename, 'w') as f:
+        f.write(sys_name + '\n')
+        f.write('\n')
+
+        # number of each thing
+        f.write('%d atoms\n' % n_atoms)
+        f.write('%d bonds\n' % n_bonds)
+        f.write('%d angles\n' % n_angles)
+        f.write('%d dihedrals\n' % n_dihedrals)
+        f.write('%d impropers\n' % n_impropers)
+        f.write('\n')
+
+        # number of unique each thing
+        if ff_param_set == 'gromos53a6':
+            f.write('56 atom types\n')
+            f.write('52 bond types\n')
+            f.write('54 angle types\n')
+            f.write('41 dihedral types\n')
+            f.write('3 improper types\n')
+
+        else:
+            f.write('%d atom types\n' % max(system.unique_atom_types))
+            if len(system.unique_bond_types) > 0:
+                f.write('%d bond types\n' % max(system.unique_bond_types))
+            else:
+                f.write('0 bond types\n')
+            if len(system.unique_angle_types) > 0:
+                f.write('%d angle types\n' % max(system.unique_angle_types))
+            else:
+                f.write('0 angle types\n')
+            if len(system.unique_dihedral_types) > 0:
+                f.write('%d dihedral types\n' % max(system.unique_dihedral_types))
+            else:
+                f.write('0 dihedral types\n')
+            if len(system.unique_improper_types) > 0:
+                f.write('%d improper types\n' % max(system.unique_improper_types))
+            else: f.write('0 improper types\n')
+
+        # box info - only does orthorhombic boxes for now
+        f.write('\n')
+        f.write('%.6f %.6f xlo xhi\n' % (box.mins[0], box.maxs[0]))
+        f.write('%.6f %.6f ylo yhi\n' % (box.mins[1], box.maxs[1]))
+        f.write('%.6f %.6f zlo zhi\n' % (box.mins[2], box.maxs[2]))
+        f.write('\n')
+
+        # write masses for each type
+        f.write('Masses')
+        f.write('\n')
+        f.write('\n')
+        for i in range(1, max(system.unique_atom_types)+1):
+            if i in system.type_mass.keys():
+                f.write('%d %.4f\n'  % (i, 
+                    system.type_mass[i]))
+            else:
+                f.write('%d 999.0   # dummy, this type not in this system\n' % i)
+        f.write('\n')
+
+        # atoms
+        f.write('Atoms')
+        f.write('\n')
+        f.write('\n')
+        use_res = False
+        if len(system.resids) == len(system.xyz):
+            use_res = True
+        for i, pos in enumerate(system.xyz):
+            resid = 1
+            if use_res == True:
+                resid = system.resids[i]
+            f.write('%d %d %d %.5f %.5f %.5f %.5f\n'
+                    % (i+1,
+                       system.resids[i],
+                       system.types[i],
+                       system.charges[i],
+                       pos[0], pos[1], pos[2]))
+        f.write('\n')
+
+        # bonds, angles, dihedrals, impropers
+        if len(system.bonds) > 0:
+            f.write('Bonds')
+            f.write('\n')
+            f.write('\n')
+            for i, bond in enumerate(system.bonds):
+                f.write('%d %d %d %d\n' % (i+1, bond[0], bond[1]+1, bond[2]+1))
+            f.write('\n')
+
+        if len(system.angles) > 0:
+            f.write('Angles')
+            f.write('\n')
+            f.write('\n')
+            for i, angle in enumerate(system.angles):
+                f.write('%d %d %d %d %d\n' % 
+                        (i+1, angle[0], angle[1]+1, angle[2]+1, angle[3]+1))
+            f.write('\n')
+
+        if len(system.dihedrals) > 0:
+            f.write('Dihedrals')
+            f.write('\n')
+            f.write('\n')
+            for i, dih in enumerate(system.dihedrals):
+                f.write('%d %d %d %d %d %d\n' %
+                        (i+1, dih[0], dih[1]+1, dih[2]+1, dih[3]+1, dih[4]+1))
+            f.write('\n')
+
+        if len(system.impropers) > 0:
+            f.write('Impropers')
+            f.write('\n')
+            f.write('\n')
+            for i, imp in enumerate(system.impropers):
+                f.write('%d %d %d %d %d %d\n' %
+                        (i+1, imp[0], imp[1]+1, imp[2]+1, imp[3]+1, imp[4]+1))
+
+def write_lammps_data(gbb, box=None, file_name='data.system', 
+        sys_name='system', prototype=False):
     """Write gbb to LAMMPS data file
 
     Args:
@@ -415,9 +541,9 @@ def write_lammps_data(gbb, box=None, file_name='data.system', sys_name='system',
             f.write(str(int(gbb.dihedrals[:, 0].max())) + ' dihedral types\n')
         f.write('\n')
 
-        f.write('%-8.4f %8.4f xlo xhi\n' % (box.dims[0, 0], box.dims[0, 1]))
-        f.write('%-8.4f %8.4f ylo yhi\n' % (box.dims[1, 0], box.dims[1, 1]))
-        f.write('%-8.4f %8.4f zlo zhi\n' % (box.dims[2, 0], box.dims[2, 1]))
+        f.write('%-8.4f %8.4f xlo xhi\n' % (box.mins[0], box.maxs[0]))
+        f.write('%-8.4f %8.4f ylo yhi\n' % (box.mins[1], box.maxs[1]))
+        f.write('%-8.4f %8.4f zlo zhi\n' % (box.mins[2], box.maxs[2]))
 
         f.write('\n')
         f.write('Masses\n')
@@ -694,3 +820,5 @@ def write_top(gbb, topfile='system.top'):
         # molecules
         f.write('[ molecules ]\n')
     print "Wrote file '" + topfile + "'"
+
+

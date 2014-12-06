@@ -7,56 +7,87 @@ import pdb
 
 
 class System():
-    """System container class
+    """System container class - used for printing data files
     """
-    def __init__(self, box=Box(None)):
+    def __init__(self, box=Box(None), gbbs=None):
         """
         """
         self.name = ''
 
+        # individual components
+        self.gbbs = list()
+
         # numbas
-        self.resids = list()
+        self.resids = list()   # what is this
         self.resnames = np.empty(shape=0, dtype='str')
         self.n_molecules = 0
 
-        # per atom
+        # per atom properties
+        """
         self.types = np.empty(shape=(0), dtype='int')
         self.masses = np.empty(shape=(0))
         self.charges = np.empty(shape=(0))
         self.xyz = np.empty(shape=(0, 3))
+        """
+        self.types = list()
+        self.masses = list()
+        self.charges = list()
+        self.xyz = list()
 
         # connectivity
+        """
         self.bonds = np.empty(shape=(0, 3), dtype='int')
         self.angles = np.empty(shape=(0, 4), dtype='int')
         self.dihedrals = np.empty(shape=(0, 5), dtype='int')
         self.impropers = np.empty(shape=(0, 5), dtype='int')
+        """
+        self.bonds = list()
+        self.angles = list()
+        self.dihedrals = list()
+        self.impropers = list()
 
-        # forcefield info
+        # forcefield info 
         self.pair_types = dict()
         self.bond_types = dict()
         self.angle_types = dict()
         self.dihedral_types = dict()
 
+        # box
         self.box = box
+
+        if gbbs:
+            self.append_gbbs(gbbs)
+
+        # other properties
+        self.atom_offset = 0
+        self.type_mass = dict()
 
     def append_gbbs(self, gbbs, update_FF=True):
         """
+            Append gbbs to the system, but don't enumerate yet
+
+            This is a very simple function, unnecessary even?
+            Args:
+                gbbs: list of gbbs to add to system
         """
         for n_mols, gbb in enumerate(gbbs):
-            n_new_atoms = gbb.types.shape[0]
-            assert n_new_atoms == gbb.xyz.shape[0]
-            if gbb.masses.shape[0] > 0:
-                assert n_new_atoms == gbb.masses.shape[0]
-            if gbb.charges.shape[0] > 0:
-                assert n_new_atoms == gbb.charges.shape[0]
+            # make sure there are the right number of atom properties
+            n_new_atoms = len(gbb.types)
+            assert n_new_atoms == len(gbb.xyz)
+            if len(gbb.masses) > 0:
+                assert n_new_atoms == len(gbb.masses)
+            if len(gbb.charges) > 0:
+                assert n_new_atoms == len(gbb.charges)
 
-            # gather all the relevant numbers
-            n_sys_atoms = self.xyz.shape[0]
+            self.gbbs.append(gbb)
+            """
             if self.types.shape[0] > 0:
                 n_atom_types = max(self.pair_types.keys())
             else:
                 n_atom_types = 0
+            """
 
+            """
             if self.bonds.shape[0] > 0:
                 #n_bond_types = np.max(self.bonds[:, 0])
                 n_bond_types = max(self.bond_types.keys())
@@ -80,7 +111,9 @@ class System():
                 n_improper_types = max(self.improper_types.keys())
             else:
                 n_improper_types = 0
+            """
 
+            """
             # update FF info for first molecule
             if (n_mols == 0) and (update_FF == True):
                 # ---update numbering of pair coeffs
@@ -147,12 +180,93 @@ class System():
             self.dihedrals = np.vstack((self.dihedrals, gbb.dihedrals))
             self.impropers = np.vstack((self.impropers, gbb.impropers))
 
+            # what is this?
             self.resids += [self.n_molecules + 1] * gbb.xyz.shape[0]
 
             self.masses = np.append(self.masses, gbb.masses)
             self.charges = np.append(self.charges, gbb.charges)
             self.xyz = np.vstack((self.xyz, gbb.xyz))
             self.n_molecules += 1
+            """
+
+    def enumerate_topology(self, destructive=True):
+        # start from 0?
+        if destructive == True:
+            self.atom_offset = 0
+
+        # add offset to each atom that gets printed
+        import pdb
+        for gbb in self.gbbs:
+            for bond in gbb.bonds:
+                for i, atom in enumerate(bond[:-1]):
+                    bond[i+1] += self.atom_offset
+                self.bonds.append(bond)
+            for angle in gbb.angles:
+                for i, atom in enumerate(angle[:-1]):
+                    angle[i+1] += self.atom_offset
+                self.angles.append(angle)
+            for dihedral in gbb.dihedrals:
+                for i, atom in enumerate(dihedral[:-1]):
+                    dihedral[i+1] += self.atom_offset
+                self.dihedrals.append(dihedral)
+            for improper in gbb.impropers:
+                for i, atom in enumerate(improper[:-1]):
+                    improper[i+1] += self.atom_offset
+                self.impropers.append(improper)
+            self.atom_offset += gbb.xyz.shape[0]
+
+            # oh and duh, add the atom-specific properties
+            for pos in gbb.xyz:
+                self.xyz.append(pos)
+            for mass in gbb.masses:
+                self.masses.append(mass)
+            for atype in gbb.types:
+                self.types.append(atype)
+            for charge in gbb.charges:
+                self.charges.append(charge)
+
+    def find_number_of_types(self):
+        """Find unique atom, bond, etc... types.
+
+        This could probably go along with enumerate_topology()
+        Also creates a dict of {type: mass}
+        """
+        self.unique_atom_types = list()
+        self.unique_bond_types = list()
+        self.unique_angle_types = list()
+        self.unique_dihedral_types = list()
+        self.unique_improper_types = list()
+        for i, atype in enumerate(self.types):
+            if not atype in self.unique_atom_types:
+                self.unique_atom_types.append(atype)
+                self.type_mass[atype] = self.masses[i]
+        for i, bond in enumerate(self.bonds):
+            if not bond[0] in self.unique_bond_types:
+                self.unique_bond_types.append(bond[0])
+        for i, angle in enumerate(self.angles):
+            if not angle[0] in self.unique_angle_types:
+                self.unique_angle_types.append(angle[0])
+        for i, dihedral in enumerate(self.dihedrals):
+            if not dihedral[0] in self.unique_dihedral_types:
+                self.unique_dihedral_types.append(dihedral[0])
+        for i, improper in enumerate(self.impropers):
+            if not improper[0] in self.unique_improper_types:
+                self.unique_improper_types.append(improper[0])
+
+        
+
+    def print_lammpsdata(self, destructive=True, atom_style='full', 
+            sys_name=None, filename='system.lammpsdata', ff_param_set=None):
+        from groupy.mdio import write_lammpsdata
+        self.resids = []
+        for i, gbb in enumerate(self.gbbs):
+            for atom in gbb.xyz:
+                self.resids.append(i+1)
+        self.enumerate_topology(destructive=destructive)
+        self.find_number_of_types()
+        write_lammpsdata(self, box=self.box, atom_style=atom_style,
+                sys_name=sys_name, filename=filename, ff_param_set=ff_param_set)
+
 
     def init_atom_kdtree(self):
         """

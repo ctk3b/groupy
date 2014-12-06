@@ -9,11 +9,11 @@ from general import anint
 class Gbb():
     """Generic building block.
     """
-    def __init__(self):
+    def __init__(self, xml_prototype=None):
         """
         """
         self.name = ''
-        self.mol_id = 1
+        self.mol_id = 0
 
         # numbas
         self.n_atoms = int()
@@ -47,6 +47,10 @@ class Gbb():
         # properties
         self.com = np.empty(shape=(3))
         self.r_gyr_sq = float()
+
+        # load prototype if one is given
+        if xml_prototype:
+            self.load_xml_prototype(xml_prototype)
 
     def delete_ions(self, ids):
         """Removes all information associated selected indices
@@ -158,6 +162,7 @@ class Gbb():
     def shift_com_to_origin(self):
         self.calc_com()
         self.translate(-self.com)
+        self.calc_com()
 
     def rotate(self, angles=[0.0, 0.0, 0.0]):
         """Rotate around given axes by given angles
@@ -371,6 +376,89 @@ class Gbb():
         self.bond_types = lmp_data['bond_types']
         self.angle_types = lmp_data['angle_types']
         self.dihedral_types = lmp_data['dihedral_types']
-
         self.n_atoms = self.xyz.shape[0]
         return box
+
+    def load_xml_prototype(self, filename):
+        """Load positions, bonds, masses, etc... from an xml file.
+        
+        """
+        from xml.etree import cElementTree
+
+        tree = cElementTree.parse(filename)
+        config = tree.getroot().find('configuration')
+        position = config.find('position')
+        bond = config.find('bond')
+        angle = config.find('angle')
+        dihedral = config.find('dihedral')
+        improper = config.find('improper')
+        mass = config.find('mass')
+        charge = config.find('charge')
+        atom_type = config.find('type')
+
+        import pdb
+        # atom properties
+        xyz = list()
+        for pos in position.text.splitlines()[1:]:
+            xyz.append([float(x) for x in pos.split()])
+
+        masses = list()
+        for m in mass.text.splitlines()[1:]:
+            masses.append([float(x) for x in m.split()])
+
+        charges = list()
+        for q in charge.text.splitlines()[1:]:
+            charges.append([float(x) for x in q.split()])
+
+        types = list()
+        for t in atom_type.text.splitlines()[1:]:
+            types.append([int(x) for x in t.split()])
+
+        # make sure there's the same amount of pos, mass and charges
+        warn = 'Different number of positions, masses, types and charges '
+        warn += 'in prototype file: %s' % filename
+        assert(len(xyz) == len(masses) and len(masses) == len(charges)), warn
+        assert(len(masses) == len(types))
+        self.charges = np.asarray(charges)
+        self.charges = np.reshape(self.charges, (self.charges.shape[0]))
+        self.masses = np.asarray(masses)
+        self.masses = np.reshape(self.masses, (self.masses.shape[0]))
+        self.xyz = np.asarray(xyz)
+        self.charges = np.reshape(self.charges, (self.charges.shape[0]))
+        self.types = np.asarray(types)
+        self.types = np.reshape(self.types, (self.types.shape[0]))
+
+        # try bonded interactions
+        try:
+            bonds = list()
+            for top in bond.text.splitlines()[1:]:
+                bonds.append([int(x) for x in top.split()])
+            self.bonds = np.asarray(bonds)
+        except AttributeError:
+            pass
+
+        try:
+            angles = list()
+            for top in angle.text.splitlines()[1:]:
+                angles.append([int(x) for x in top.split()])
+            self.angles = np.asarray(angles)
+        except AttributeError:
+            pass
+
+        try:
+            dihedrals = list()
+            for top in dihedral.text.splitlines()[1:]:
+                dihedrals.append([int(x) for x in top.split()])
+            self.dihedrals = np.asarray(dihedrals)
+        except AttributeError:
+            pass
+
+        try:
+            impropers = list()
+            for top in improper.text.splitlines()[1:]:
+                impropers.append([int(x) for x in top.split()])
+            self.impropers = np.asarray(impropers)
+        except AttributeError:
+            pass
+ 
+
