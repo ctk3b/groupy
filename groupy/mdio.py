@@ -391,6 +391,11 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
     n_dihedrals = len(system.dihedrals)
     n_impropers = len(system.impropers)
 
+    # give warning if sum(charges) != 0 (give some tolerance for machine presision)
+    if abs(sum(system.charges)) > 1.0e-8:
+        print('Warning: non-zero net system charge (%.4f). Proceed with caution!'
+                % sum(system.charges))
+
     with open(filename, 'w') as f:
         f.write(sys_name + '\n')
         f.write('\n')
@@ -463,6 +468,38 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
                     type_mass[atype] = system.type_mass[atype]
                     print(warn_message)
 
+        elif ff_param_set == 'charmm':
+            f.write('20 atom types\n')
+            f.write('27 bond types\n')
+            f.write('65 angle types\n')
+            f.write('68 dihedral types\n')
+            f.write('15 improper types\n')
+            mO = 15.9994
+            mN = 14.0070
+            mC = 12.0110
+            mH = 1.0080
+            mDum = 0.000
+            type_mass = {}
+            lazy = []
+            lazy.append([mO, 1, 13, 14, 18, 20])
+            lazy.append([mN, 12])
+            lazy.append([mC, 3, 4, 5, 6, 15, 17])
+            lazy.append([mH, 2, 7, 8, 9, 10, 11, 16, 19])
+            for element in lazy:
+                for atype in element[1:]:
+                    type_mass[atype] = element[0]
+
+            # now check that these are the same as in the system gbbs
+            import pdb
+            for atype in system.type_mass.keys():
+                if type_mass[atype] != system.type_mass[atype]:
+                    warn_message = "Warning: atom type %d " % atype
+                    warn_message += "given different masses in prototype "
+                    warn_message += "and %s force field. " % ff_param_set
+                    warn_message += "Using masses given in prototype."
+                    type_mass[atype] = system.type_mass[atype]
+                    print(warn_message)
+
         else:
             f.write('%d atom types\n' % max(system.unique_atom_types))
             if len(system.unique_bond_types) > 0:
@@ -492,10 +529,10 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
         f.write('Masses')
         f.write('\n')
         f.write('\n')
-        for i in range(1, max(system.unique_atom_types)+1):
-            if i in system.type_mass.keys():
+        for i in range(1, max(type_mass.keys())+1):
+            if type_mass[i]:
                 f.write('%d %.4f\n'  % (i, 
-                    system.type_mass[i]))
+                    type_mass[i]))
             else:
                 f.write('%d 999.0   # dummy, this type not in this system\n' % i)
         f.write('\n')
