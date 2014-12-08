@@ -19,20 +19,21 @@ def read_frame_lammpstrj(trj, read_velocities=False):
         xyz (numpy.ndarray):
         types (numpy.ndarray):
         step (int):
-        box (numpy.ndarray):
+        box (groupy Box object):
         vxyz (numpy.ndarray):
     """
-    box = np.empty(shape=(3, 2))
+    box_dims = np.empty(shape=(3, 2))
 
     # --- begin header ---
-    trj.readline()  # text
+    trj.readline()  # text "ITEM: TIMESTEP"
     step = int(trj.readline())  # timestep
-    trj.readline()  # text
+    trj.readline()  # text "ITEM: NUMBER OF ATOMS"
     n_atoms = int(trj.readline())  # num atoms
-    trj.readline()  # text
-    box[0] = trj.readline().split()  # x-dim of box
-    box[1] = trj.readline().split()  # y-dim of box
-    box[2] = trj.readline().split()  # z-dim of box
+    trj.readline()  # text "ITEM: BOX BOUNDS pp pp pp"
+    box_dims[0] = trj.readline().split()  # x-dim of box
+    box_dims[1] = trj.readline().split()  # y-dim of box
+    box_dims[2] = trj.readline().split()  # z-dim of box
+    box = Box(mins=box_dims[:, 0], maxs=box_dims[:, 1])
     trj.readline()  # text
     # --- end header ---
 
@@ -54,10 +55,9 @@ def read_frame_lammpstrj(trj, read_velocities=False):
     # --- end body ---
 
     if read_velocities:
-        return xyz, types, step, Box(box[:, 1], box[:, 0]), vxyz
+        return xyz, types, step, box, vxyz
     else:
-        return xyz, types, step, Box(box[:, 1], box[:, 0])
-
+        return xyz, types, step, box
 
 def read_xyz(file_name):
     """Load an xyz file into a coordinate and a type array."""

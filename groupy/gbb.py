@@ -9,10 +9,16 @@ from general import anint
 class Gbb():
     """Generic building block.
     """
-    def __init__(self, xml_prototype=None):
+    def __init__(self, xml_prototype=None, name=None):
+        """Constructor.
+
+        Args:
+            xml_prototype (str): filename of xml prototype to read
+            name (str): name of gbb (e.g., 'water')
+
         """
-        """
-        self.name = ''
+        if name:
+            self.name = name
         self.mol_id = 0
 
         # numbas

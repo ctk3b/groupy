@@ -287,3 +287,18 @@ class System():
                 break
 
         return neighbors
+    
+    def sort_by_name(self, order):
+        """Sort the gbbs by name.
+
+        Args:
+            order: list of names by which to sort the gbbs.
+
+        Useful for sorting molecules into blocks of gbbs with the same name.
+        For example, you may want a mixed lipid system to be sorted so that lipi
+        ds of type1 are the first N atoms, then type2 are the next M atoms and 
+        so on and so forth.
+        """
+
+        # TODO: write this code
+        pass
