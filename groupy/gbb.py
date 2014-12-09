@@ -405,21 +405,23 @@ class Gbb():
         import pdb
         # atom properties
         xyz = list()
-        for pos in position.text.splitlines()[1:4]:
-            xyz.append([float(x) for x in pos.split()])
+        for pos in position.text.splitlines()[1:]:
+            xyz.append([float(x) for x in pos.split()[:3]])
 
         masses = list()
-        for m in mass.text.splitlines()[1:2]:
-            masses.append([float(x) for x in m.split()])
+        for m in mass.text.splitlines()[1:]:
+            masses.append([float(x) for x in m.split()[:1]])
 
         charges = list()
-        for q in charge.text.splitlines()[1:2]:
-            charges.append([float(x) for x in q.split()])
+        for q in charge.text.splitlines()[1:]:
+            charges.append([float(x) for x in q.split()[:1]])
 
         types = list()
-        for t in atom_type.text.splitlines()[1:2]:
-            types.append([int(x) for x in t.split()])
+        for t in atom_type.text.splitlines()[1:]:
+            types.append([int(x) for x in t.split()[:1]])
 
+        import pdb
+        pdb.set_trace()
         # make sure there's the same amount of pos, mass and charges
         warn = 'Different number of positions, masses, types and charges '
         warn += 'in prototype file: %s' % filename
@@ -438,32 +440,32 @@ class Gbb():
         # TODO: make more robust for comments
         try:
             bonds = list()
-            for top in bond.text.splitlines()[1:4]:
-                bonds.append([int(x) for x in top.split()])
+            for top in bond.text.splitlines()[1:]:
+                bonds.append([int(x) for x in top.split()[:3]])
             self.bonds = np.asarray(bonds)
         except AttributeError:
             pass
 
         try:
             angles = list()
-            for top in angle.text.splitlines()[1:5]:
-                angles.append([int(x) for x in top.split()])
+            for top in angle.text.splitlines()[1:]:
+                angles.append([int(x) for x in top.split()[:4]])
             self.angles = np.asarray(angles)
         except AttributeError:
             pass
 
         try:
             dihedrals = list()
-            for top in dihedral.text.splitlines()[1:6]:
-                dihedrals.append([int(x) for x in top.split()])
+            for top in dihedral.text.splitlines()[1:]:
+                dihedrals.append([int(x) for x in top.split()[:5]])
             self.dihedrals = np.asarray(dihedrals)
         except AttributeError:
             pass
 
         try:
             impropers = list()
-            for top in improper.text.splitlines()[1:6]:
-                impropers.append([int(x) for x in top.split()])
+            for top in improper.text.splitlines()[1:]:
+                impropers.append([int(x) for x in top.split()[:5]])
             self.impropers = np.asarray(impropers)
         except AttributeError:
             pass
