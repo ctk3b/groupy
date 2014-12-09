@@ -45,11 +45,9 @@ class Bilayer():
         self.solvent_density = solvent_density
 
         # parse the spacing_z and shift lipids as necessary
-        if isinstance(spacing_z, list):
-            for i, lipid in enumerate(lipids):
-                assert len(lipids) == len(spacing_z)
-                lipid[0].shift_com_to_origin()
-                lipid[0].translate(xyz=[0.0, 0.0, spacing_z[i]])         
+        for i, lipid in enumerate(lipids):
+            lipid[0].shift_com_to_origin()
+            lipid[0].translate(xyz=[0.0, 0.0, lipid[2]])         
 
         # a few calculations to figure things out
         self.n_lipids_per_layer = self.n_x * self.n_y

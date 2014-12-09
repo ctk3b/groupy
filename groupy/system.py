@@ -305,9 +305,9 @@ class System():
         for lipid_name in order:
             for molecule in self.gbbs:
                 if molecule.name == lipid_name:
-                    self.sorted_gbbs.append(deepcopy(molecule))
+                    self.sorted_gbbs.append(molecule)
         if len(self.sorted_gbbs) == len(self.gbbs):
-            self.gbbs = deepcopy(self.sorted_gbbs)
+            self.gbbs = self.sorted_gbbs
         else: 
             print "Warning: Not all molecules in sorted list, aborting sorting."
 
