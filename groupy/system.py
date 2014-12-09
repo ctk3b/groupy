@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from scipy.spatial import cKDTree
 
@@ -299,6 +301,18 @@ class System():
         ds of type1 are the first N atoms, then type2 are the next M atoms and 
         so on and so forth.
         """
+        self.sorted_gbbs = list()
+        for lipid_name in order:
+            for molecule in self.gbbs:
+                if molecule.name == lipid_name:
+                    self.sorted_gbbs.append(deepcopy(molecule))
+        if len(self.sorted_gbbs) == len(self.gbbs):
+            self.gbbs = deepcopy(self.sorted_gbbs)
+        else: 
+            print "Warning: Not all molecules in sorted list, aborting sorting."
+
+
+
 
         # TODO: write this code
         pass
