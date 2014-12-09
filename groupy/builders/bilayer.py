@@ -15,8 +15,8 @@ class Bilayer():
     """
 
     def __init__(self, lipids, n_x=10, n_y=10, 
-                 area_per_lipid=1.0, solvent=None, lipid_box=None, 
-                 spacing_z=0.5, solvent_per_lipid=None, random_seed=12345,
+                 area_per_lipid=1.0, solvent=None, spacing_z=0.5, 
+                 solvent_per_lipid=None, random_seed=12345,
                  mirror=True, solvent_density=1.0/1.661):
         """Constructor. Builds a bilayer with several tunable parameters.
 
@@ -38,13 +38,18 @@ class Bilayer():
         self.apl = area_per_lipid
         self.n_x = n_x
         self.n_y = n_y
-        self.spacing_z = spacing_z
         self.mirror = mirror
         self.random_seed = random_seed
         self.n_solvent_per_lipid = solvent_per_lipid
-        self._lipid_box = lipid_box
         self.molecules = []
         self.solvent_density = solvent_density
+
+        # parse the spacing_z and shift lipids as necessary
+        if isinstance(spacing_z, list):
+            for i, lipid in enumerate(lipids):
+                assert len(lipids) == len(spacing_z)
+                lipid[0].shift_com_to_origin()
+                lipid[0].translate(xyz=[0.0, 0.0, spacing_z[i]])         
 
         # a few calculations to figure things out
         self.n_lipids_per_layer = self.n_x * self.n_y
@@ -56,7 +61,6 @@ class Bilayer():
              1.0]))
         self.mask = Lattice()
         self.mask.grid_mask_2d(n_x, n_y, box=self.box)
-        self.spacing = np.array([0, 0, spacing_z])
 
         self._n_each_lipid_per_layer = list()
 
@@ -139,14 +143,12 @@ class Bilayer():
             current_type = self.lipids[i][0]
             for n_this_lipid_type in range(n_of_lipid_type):
                 new_lipid = deepcopy(current_type)
-                new_lipid.shift_com_to_origin()
                 if flip_orientation == True:
                     new_lipid.rotate(angles=np.array([np.pi, 0.0, 0.0]))
-                    new_lipid.translate(
-                            -self.spacing - new_lipid.xyz[self.lipids[i][2]])
+                    #new_lipid.translate(-new_lipid.xyz[self.lipids[i][2]])
                 else:
-                    new_lipid.translate(
-                            self.spacing - new_lipid.xyz[self.lipids[i][2]])
+                    pass
+                    #new_lipid.translate(-new_lipid.xyz[self.lipids[i][2]])
 
                 # Move to point on mask
                 random_index = lipid_labels[lipids_placed]

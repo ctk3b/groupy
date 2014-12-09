@@ -405,19 +405,19 @@ class Gbb():
         import pdb
         # atom properties
         xyz = list()
-        for pos in position.text.splitlines()[1:]:
+        for pos in position.text.splitlines()[1:4]:
             xyz.append([float(x) for x in pos.split()])
 
         masses = list()
-        for m in mass.text.splitlines()[1:]:
+        for m in mass.text.splitlines()[1:2]:
             masses.append([float(x) for x in m.split()])
 
         charges = list()
-        for q in charge.text.splitlines()[1:]:
+        for q in charge.text.splitlines()[1:2]:
             charges.append([float(x) for x in q.split()])
 
         types = list()
-        for t in atom_type.text.splitlines()[1:]:
+        for t in atom_type.text.splitlines()[1:2]:
             types.append([int(x) for x in t.split()])
 
         # make sure there's the same amount of pos, mass and charges
@@ -435,9 +435,10 @@ class Gbb():
         self.types = np.reshape(self.types, (self.types.shape[0]))
 
         # try bonded interactions
+        # TODO: make more robust for comments
         try:
             bonds = list()
-            for top in bond.text.splitlines()[1:]:
+            for top in bond.text.splitlines()[1:4]:
                 bonds.append([int(x) for x in top.split()])
             self.bonds = np.asarray(bonds)
         except AttributeError:
@@ -445,7 +446,7 @@ class Gbb():
 
         try:
             angles = list()
-            for top in angle.text.splitlines()[1:]:
+            for top in angle.text.splitlines()[1:5]:
                 angles.append([int(x) for x in top.split()])
             self.angles = np.asarray(angles)
         except AttributeError:
@@ -453,7 +454,7 @@ class Gbb():
 
         try:
             dihedrals = list()
-            for top in dihedral.text.splitlines()[1:]:
+            for top in dihedral.text.splitlines()[1:6]:
                 dihedrals.append([int(x) for x in top.split()])
             self.dihedrals = np.asarray(dihedrals)
         except AttributeError:
@@ -461,10 +462,8 @@ class Gbb():
 
         try:
             impropers = list()
-            for top in improper.text.splitlines()[1:]:
+            for top in improper.text.splitlines()[1:6]:
                 impropers.append([int(x) for x in top.split()])
             self.impropers = np.asarray(impropers)
         except AttributeError:
             pass
- 
-
