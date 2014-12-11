@@ -213,7 +213,6 @@ class Bilayer():
         bottom_water_points.grid_mask_3d(n_water_x, n_water_y, n_water_z,
                 box=bottom_water_box)
         self.solvent.shift_com_to_origin()
-        self.solvent.shift_com_to_origin()
         for point in top_water_points.points[:self.n_solvent_per_layer]:
             t = deepcopy(self.solvent)
             t.translate(point)
