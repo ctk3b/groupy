@@ -3,6 +3,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.spatial import cKDTree
 
+from system_info import System_info
 from box import *
 
 
