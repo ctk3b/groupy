@@ -9,7 +9,7 @@ from box import *
 class System():
     """System container class - used for printing data files
     """
-    def __init__(self, box=Box(None), gbbs=None):
+    def __init__(self, box=Box(None), gbbs=None, system_info=None):
         """
         """
         self.name = ''
@@ -54,6 +54,11 @@ class System():
 
         # box
         self.box = box
+
+        if system_info:
+            self.system_info = system_info
+        else:
+            self.system_info = System_info()
 
         if gbbs:
             self.append_gbbs(gbbs)
@@ -311,8 +316,6 @@ class System():
         else: 
             print "Warning: Not all molecules in sorted list, aborting sorting."
 
-
-
-
-        # TODO: write this code
+    def convert_from_traj(xyz, types):
         pass
+

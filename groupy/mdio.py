@@ -412,9 +412,9 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
         # number of unique each thing
         if ff_param_set == 'gromos53a6':
             f.write('58 atom types\n')
-            f.write('53 bond types\n')
+            f.write('54 bond types\n')
             f.write('55 angle types\n')
-            f.write('42 dihedral types\n')
+            f.write('43 dihedral types\n')
             f.write('3 improper types\n')
             mO = 15.9994
             mN = 14.0067
