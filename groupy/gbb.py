@@ -58,6 +58,27 @@ class Gbb():
         if xml_prototype:
             self.load_xml_prototype(xml_prototype)
 
+    def insert_atom(self, pos, atype=None, mass=None, charge=None):
+        """Append an atom to the gbb
+
+        Args:
+            pos: position of new atom
+            atype: atom type of new atom
+            mass: mass of new atom
+            charge: charge of new atom
+        """
+
+        import pdb
+        #pdb.set_trace()
+        pos = np.reshape(pos, (1, 3))
+        self.xyz = np.append(self.xyz, pos, axis=0)
+        if atype:
+            self.types = np.append(self.types, atype)#, axis=0)
+        if mass:
+            self.masses = np.append(self.masses, mass)#, axis=0)
+        if charge:
+            self.charges = np.append(self.charges, charge)#, axis=0)
+
     def delete_ions(self, ids):
         """Removes all information associated selected indices
 

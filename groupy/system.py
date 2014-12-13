@@ -1,10 +1,12 @@
+import collections
 from copy import deepcopy
 
 import numpy as np
 from scipy.spatial import cKDTree
 
-from system_info import System_info
 from box import *
+from gbb import Gbb
+from mdio import *
 
 
 class System():
@@ -21,7 +23,6 @@ class System():
         # numbas
         self.resids = list()   # what is this
         self.resnames = np.empty(shape=0, dtype='str')
-        self.n_molecules = 0
 
         # per atom properties
         """
@@ -56,10 +57,13 @@ class System():
         # box
         self.box = box
 
+        # self.system_info = list to give information on make up of system
+        self._n_components = 0
+        self.system_info = list()
         if system_info:
-            self.system_info = system_info
-        else:
-            self.system_info = System_info()
+            for component in system_info:
+                self.system_info.append(component)
+                self._n_components += 1
 
         if gbbs:
             self.append_gbbs(gbbs)
@@ -68,6 +72,45 @@ class System():
         self.atom_offset = 0
         self.type_mass = dict()
 
+    def n_atoms(self):
+        n_atom = 0
+        for component in self.system_info:
+            n_atom += component[0] * component[1]
+        return n_atom
+
+    def n_molecules(self):
+        n_molecule = 0
+        for component in self.system_info:
+            n_molecule += component[0]
+        return n_molecule
+
+    def add_components_to_info(self, t_components):
+        for t_component in t_components:
+            assert len(t_component) == 3
+            self.system_info.append(t_component)
+            self._n_components += 1
+
+    def cumulative_atoms(self, n):
+        """Return the number of atoms in the first n components.
+
+        Args:
+            n (int): return number of atoms in first n components
+        """
+        cum_atoms = 0
+        for i in range(n):
+            cum_atoms += self.system_info[i][0] * self.system_info[i][1]
+        return cum_atoms
+
+    def print_system_info(self, filename="system-composition.txt"):
+        f = open(filename, 'w')
+        f.write('SYSTEM COMPOSITION\n\n')
+        f.write('Species     Molecules     Atoms per molecule\n')
+        f.write('-------     ---------     ------------------\n')
+        for i, component in enumerate(self.system_info):
+            f.write('%-12s%-14d%-d\n' % (component[2], component[0], component[1]))
+        f.write('\n')
+        f.write('%d total molecules\n' % self.n_molecules())
+        f.write('%d total atoms' % self.n_atoms())
     def append_gbbs(self, gbbs, update_FF=True):
         """
             Append gbbs to the system, but don't enumerate yet
@@ -262,7 +305,8 @@ class System():
         
 
     def print_lammpsdata(self, destructive=True, atom_style='full', 
-            sys_name=None, filename='system.lammpsdata', ff_param_set=None):
+            sys_name=None, filename='system.lammpsdata', ff_param_set=None,
+            system_info=None):
         from groupy.mdio import write_lammpsdata
         self.resids = []
         for i, gbb in enumerate(self.gbbs):
@@ -271,7 +315,17 @@ class System():
         self.enumerate_topology(destructive=destructive)
         self.find_number_of_types()
         write_lammpsdata(self, box=self.box, atom_style=atom_style,
-                sys_name=sys_name, filename=filename, ff_param_set=ff_param_set)
+                sys_name=sys_name, filename=filename, ff_param_set=ff_param_set,
+                system_info=system_info)
+
+
+    def write_lammpstrj(self, step=1, fmt='5col', 
+            filename='traj.lammpstrj', mode='a'):
+        self.enumerate_topology()
+        import pdb
+        pdb.set_trace()
+        write_lammpstrj_frame(np.asarray(self.xyz), np.asarray(self.types),
+                step=1, box=self.box, fmt=fmt, filename=filename, mode=mode)
 
 
     def init_atom_kdtree(self):
@@ -317,6 +371,45 @@ class System():
         else: 
             print "Warning: Not all molecules in sorted list, aborting sorting."
 
-    def convert_from_traj(xyz, types):
-        pass
+    def convert_from_traj(self, xyz, types, clear=True):
+        """Convert a list of coordinates into a list of gbbs
 
+        Args:
+            xyz: numpy array of shape (N, 3) containing atomic positions
+            types: numpy array of shape (N) containing atomic types
+            clear: (if True) clear the system's gbb list
+        """
+
+        if np.all(clear):
+            self.gbbs = list()
+            
+        # make sure xyz contains the right number of atoms and types
+        error_message = 'Expected %d atoms, ' % self.n_atoms()
+        error_message += 'received %d atoms.' % xyz.shape[0]
+        assert xyz.shape[0] == self.n_atoms(), error_message
+        error_message = '%d atoms given != ' % xyz.shape[0]
+        error_message += '%d types given.' % types.shape[0]
+        assert xyz.shape[0] == types.shape[0], error_message
+        
+        for i in range(self._n_components):
+            for j in range(self.cumulative_atoms(i),
+                           self.cumulative_atoms(i+1),
+                           self.system_info[i][1]):
+                t_gbb = Gbb(name=self.system_info[i][2])
+                for k in range(self.system_info[i][1]):
+                    t_gbb.insert_atom(pos=xyz[j+k], atype=types[j+k])
+                self.gbbs.append(t_gbb)
+
+    def get_composition(self):
+        self.system_info = list()
+        t_system_info = collections.OrderedDict()
+        for i, gbb in enumerate(self.gbbs):
+            if gbb.name in t_system_info:
+                assert len(gbb.xyz) == t_system_info[gbb.name][1]
+                t_system_info[gbb.name][0] += 1
+            elif gbb.name not in t_system_info:
+                t_system_info[gbb.name] = [1, len(gbb.xyz)]
+        for comp in t_system_info:
+            n_mol = t_system_info[comp][0]
+            n_apm = t_system_info[comp][1]
+            self.system_info.append([n_mol, n_apm, comp])

@@ -90,6 +90,25 @@ def write_xyz(xyz, types, file_name, comment=''):
                     (atom, xyz[i, 0], xyz[i, 1], xyz[i, 2]))
     print "Wrote file '" + file_name + "'"
 
+def write_lammpstrj_frame(xyz, types, step=1, box=Box(None), fmt='5col',
+        filename='traj.lammpstrj', mode='a'):
+    assert len(xyz) == len(types)
+    item_line = {'5col': 'ITEM: ATOMS id type x y z\n'}
+    with open(filename, mode) as f:
+        f.write('ITEM: TIMESTEP\n')
+        f.write('%d\n' % step)
+        f.write('ITEM: NUMBER OF ATOMS\n')
+        f.write('%d\n' % len(xyz))
+        f.write('ITEM: BOX BOUNDS\n')
+        for i in range(3):
+            f.write('%.6f %.6f\n' % (box.mins[i], box.maxs[i]))
+        f.write(item_line[fmt])
+        for i, pos in enumerate(xyz):
+            if fmt == '5col':
+                f.write('%d %d %.4f %.4f %.4f\n' %
+                        (i+1, types[i], pos[0], pos[1], pos[2]))
+
+
 
 def read_lammps_data(data_file, verbose=False):
     """Reads a LAMMPS data file
@@ -377,7 +396,8 @@ def read_lammps_data(data_file, verbose=False):
     return lmp_data, box
 
 def write_lammpsdata(system, box, filename='groupy.lammpsdata',
-        atom_style='full', sys_name=None, ff_param_set=None):
+        atom_style='full', sys_name=None, ff_param_set=None,
+        system_info=False):
     """Write a lammpsdata file with a given format. 
 
     """
@@ -524,6 +544,18 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
         f.write('%.6f %.6f ylo yhi\n' % (box.mins[1], box.maxs[1]))
         f.write('%.6f %.6f zlo zhi\n' % (box.mins[2], box.maxs[2]))
         f.write('\n')
+
+        # if system_info == True, the write the system info as comments
+        if system_info == True:
+            f.write('# SYSTEM COMPOSITION\n')
+            f.write('# Species     Molecules     Atoms per molecule\n')
+            f.write('# -------     ---------     ------------------\n')
+            for i, component in enumerate(system.system_info):
+                f.write('# %-12s%-14d%-d\n' % 
+                        (component[2], component[0], component[1]))
+            f.write('\n')
+            f.write('# %d total molecules\n' % system.n_molecules())
+            f.write('# %d total atoms\n\n' % system.n_atoms())
 
         # write masses for each type
         f.write('Masses')
