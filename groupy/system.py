@@ -101,6 +101,17 @@ class System():
             cum_atoms += self.system_info[i][0] * self.system_info[i][1]
         return cum_atoms
 
+    def cumulative_molecules(self, n):
+        """Return the number of molecules in the first n components.
+
+        Args:
+            n (int): return number of molecules in first n components
+        """
+        cum_molecules = 0
+        for i in range(n):
+            cum_molecules += self.system_info[i][0]
+        return cum_molecules
+
     def print_system_info(self, filename="system-composition.txt"):
         f = open(filename, 'w')
         f.write('SYSTEM COMPOSITION\n\n')
