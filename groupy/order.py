@@ -19,7 +19,7 @@ def calc_director(I):
 def calc_Q_tensor(directors):
     """Calculate Q tensor of set of directors.
     """
-    normed = directors / np.sqrt((directors ** 2).sum(-1))[..., np.newaxis]
+    normed = directors / np.sqrt((directors ** 2.0).sum(-1))[..., np.newaxis]
     Q = np.zeros(shape=(3, 3))
     for vector in normed:
         Q[0, 0] += 3.0 * vector[0] * vector[0] - 1

@@ -248,6 +248,21 @@ class Gbb():
                     elif c > box.dims[k, 1]:
                         self.xyz[i, k] = box.dims[k, 0] + abs(c - box.dims[k, 1])
 
+    def wrap_com(self, box):
+        """Wrap the molecule so that the center of mass is in the box, but the molecule is not broken.
+
+        Args:
+            box (Box): box to use in wrapping
+        """
+        self.calc_com()
+        for k, r in enumerate(self.com):
+            while self.com[k] < box.mins[k]:
+                self.xyz[:, k] += box.lengths[k]
+                self.calc_com()
+            while point[k] > box.maxs[k]:
+                self.xyz[:, k] -= box.lengths[k]
+                self.calc_com()
+
     def mirror(self, box, dim=[False, False, True], d=0.0, verbose=False):
         """Creates a mirror image of gbb in a given direction.
 
