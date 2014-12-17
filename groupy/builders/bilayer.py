@@ -15,8 +15,8 @@ class Bilayer():
     """
 
     def __init__(self, lipids, n_x=10, n_y=10, 
-                 area_per_lipid=1.0, solvent=None, spacing_z=0.5, 
-                 solvent_per_lipid=None, random_seed=12345,
+                 area_per_lipid=1.0, solvent=None, solvent_per_lipid=None,
+                 random_seed=12345,
                  mirror=True, solvent_density=1.0/1.661):
         """Constructor. Builds a bilayer with several tunable parameters.
 
@@ -84,9 +84,10 @@ class Bilayer():
                     flip_orientation=True)
         for lipid in bottom_layer:
             self.molecules.append(lipid)
-        solvents = self.add_solvent()
-        for solvent in solvents:
-            self.molecules.append(solvent)
+        if self.n_solvent_per_lipid > 0:
+            solvents = self.add_solvent()
+            for solvent in solvents:
+                self.molecules.append(solvent)
 
     def check_fractions(self):
         frac_sum = 0
