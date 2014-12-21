@@ -259,7 +259,7 @@ class Gbb():
             while self.com[k] < box.mins[k]:
                 self.xyz[:, k] += box.lengths[k]
                 self.calc_com()
-            while point[k] > box.maxs[k]:
+            while self.com[k] > box.maxs[k]:
                 self.xyz[:, k] -= box.lengths[k]
                 self.calc_com()
 
@@ -421,7 +421,7 @@ class Gbb():
         self.n_atoms = self.xyz.shape[0]
         return box
 
-    def load_xml_prototype(self, filename):
+    def load_xml_prototype(self, filename, skip_coords=False):
         """Load positions, bonds, masses, etc... from an xml file.
         
         """
@@ -459,13 +459,17 @@ class Gbb():
         # make sure there's the same amount of pos, mass and charges
         warn = 'Different number of positions, masses, types and charges '
         warn += 'in prototype file: %s' % filename
-        assert(len(xyz) == len(masses) and len(masses) == len(charges)), warn
+        if not skip_coords:
+            assert(len(xyz) == len(masses) and len(masses) == len(charges)), warn
+        else:
+            assert(len(masses) == len(charges))
         assert(len(masses) == len(types))
         self.charges = np.asarray(charges)
         self.charges = np.reshape(self.charges, (self.charges.shape[0]))
         self.masses = np.asarray(masses)
         self.masses = np.reshape(self.masses, (self.masses.shape[0]))
-        self.xyz = np.asarray(xyz)
+        if not skip_coords:
+            self.xyz = np.asarray(xyz)
         self.charges = np.reshape(self.charges, (self.charges.shape[0]))
         self.types = np.asarray(types)
         self.types = np.reshape(self.types, (self.types.shape[0]))
