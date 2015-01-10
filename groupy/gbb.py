@@ -150,28 +150,69 @@ class Gbb():
         com /= cum_mass
         self.com = com
 
-    def calc_inertia_tensor(self):
+    def calc_com_group(self, atoms):
+        """Calculate the center of mass of a group of atoms in the gbb.
+
+        Args:
+            atoms: list of indices for which to calculate the center of mass
+
+        Returns: 
+            com (np.ndarray): center of mass of the atoms in atoms
+        """
+        assert self.xyz.shape[0] == self.masses.shape[0]
+        cum_mass = 0.0
+        com = np.array([0., 0., 0.])
+        for atom in atoms:
+            com += self.xyz[atom] * self.masses[atom]
+            cum_mass += self.masses[atom]
+        com /= cum_mass
+        return com
+
+
+    def calc_inertia_tensor(self, atoms=None):
         """Calculates the moment of inertia tensor of the gbb.
+
+        Args:
+            atoms: list of atom indices to include in calculation
 
         Returns:
             I (np.ndarray): moment of inertia tensor
+            
+        The atoms list is useful for calculating the director of different parts
+        of a molecules, e.g., each tail in a 2-tailed lipid.
         """
         assert self.xyz.shape[0] == self.masses.shape[0]
         I = np.zeros(shape=(3, 3))
-        self.calc_com()
-        for i, coord0 in enumerate(self.xyz):
-            mass = self.masses[i]
-            coord = coord0 - self.com
-            I[0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
-            I[1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
-            I[2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
-            I[0, 1] -= mass * coord[0] * coord[1]
-            I[0, 2] -= mass * coord[0] * coord[2]
-            I[1, 2] -= mass * coord[1] * coord[2]
-        I[1, 0] = I[0, 1]
-        I[2, 0] = I[0, 2]
-        I[2, 1] = I[1, 2]
-        return I
+        if not atoms: 
+            self.calc_com()
+            for i, coord0 in enumerate(self.xyz):
+                mass = self.masses[i]
+                coord = coord0 - self.com
+                I[0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
+                I[1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
+                I[2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
+                I[0, 1] -= mass * coord[0] * coord[1]
+                I[0, 2] -= mass * coord[0] * coord[2]
+                I[1, 2] -= mass * coord[1] * coord[2]
+            I[1, 0] = I[0, 1]
+            I[2, 0] = I[0, 2]
+            I[2, 1] = I[1, 2]
+            return I
+        else:
+            com = self.calc_com_group(atoms)
+            for atom in atoms:
+                mass = self.masses[atom]
+                coord = self.xyz[atom] - com
+                I[0, 0] += mass * (coord[1] * coord[1] + coord[2] * coord[2])
+                I[1, 1] += mass * (coord[0] * coord[0] + coord[2] * coord[2])
+                I[2, 2] += mass * (coord[0] * coord[0] + coord[1] * coord[1])
+                I[0, 1] -= mass * coord[0] * coord[1]
+                I[0, 2] -= mass * coord[0] * coord[2]
+                I[1, 2] -= mass * coord[1] * coord[2]
+            I[1, 0] = I[0, 1]
+            I[2, 0] = I[0, 2]
+            I[2, 1] = I[1, 2]
+            return I
 
     def calc_r_gyr_sq(self):
         """Calculate radius of gyration.
@@ -244,7 +285,7 @@ class Gbb():
                 for k in range(3):  # TODO: vectorize
                     if dim[k] == True:
                         dr = self.xyz[i, k] - self.xyz[0, k]
-                        box_length = box.length[k]
+                        box_length = box.lengths[k]
                         self.xyz[i, k] -= box_length * anint(dr / box_length)
 
     def wrap(self, box, dim=[True, True, True]):
@@ -270,7 +311,7 @@ class Gbb():
             while self.com[k] < box.mins[k]:
                 self.xyz[:, k] += box.lengths[k]
                 self.calc_com()
-            while point[k] > box.maxs[k]:
+            while self.com[k] > box.maxs[k]:
                 self.xyz[:, k] -= box.lengths[k]
                 self.calc_com()
 
@@ -432,7 +473,7 @@ class Gbb():
         self.n_atoms = self.xyz.shape[0]
         return box
 
-    def load_xml_prototype(self, filename):
+    def load_xml_prototype(self, filename, skip_coords=False):
         """Load positions, bonds, masses, etc... from an xml file.
         
         """
@@ -470,13 +511,17 @@ class Gbb():
         # make sure there's the same amount of pos, mass and charges
         warn = 'Different number of positions, masses, types and charges '
         warn += 'in prototype file: %s' % filename
-        assert(len(xyz) == len(masses) and len(masses) == len(charges)), warn
+        if not skip_coords:
+            assert(len(xyz) == len(masses) and len(masses) == len(charges)), warn
+        else:
+            assert(len(masses) == len(charges))
         assert(len(masses) == len(types))
         self.charges = np.asarray(charges)
         self.charges = np.reshape(self.charges, (self.charges.shape[0]))
         self.masses = np.asarray(masses)
         self.masses = np.reshape(self.masses, (self.masses.shape[0]))
-        self.xyz = np.asarray(xyz)
+        if not skip_coords:
+            self.xyz = np.asarray(xyz)
         self.charges = np.reshape(self.charges, (self.charges.shape[0]))
         self.types = np.asarray(types)
         self.types = np.reshape(self.types, (self.types.shape[0]))
