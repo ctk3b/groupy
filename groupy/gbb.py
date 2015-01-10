@@ -79,6 +79,9 @@ class Gbb():
         if charge:
             self.charges = np.append(self.charges, charge)#, axis=0)
 
+    def rename(self, name):
+        self.name = name
+
     def delete_ions(self, ids):
         """Removes all information associated selected indices
 
@@ -190,6 +193,14 @@ class Gbb():
         self.calc_com()
         self.translate(-self.com)
         self.calc_com()
+
+    def shift_atom_to_origin(self, atom):
+        """Translate the whole molecule so that one atom is at the origin
+
+        Args:
+            atom (int): translate so the atomth atom is at the origin.
+        """
+        self.translate(-self.xyz[atom])
 
     def rotate(self, angles=[0.0, 0.0, 0.0]):
         """Rotate around given axes by given angles
