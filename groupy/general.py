@@ -30,6 +30,9 @@ def anint(x):
 
 def calc_angle(u, v, already_normed=False):
     """Compute the angle between 2 vectors
+
+    Returns:
+        angle between the 2 vectors in degrees
     """
     if already_normed:
         c = np.dot(u, v)
