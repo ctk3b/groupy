@@ -473,7 +473,7 @@ class Gbb():
         self.n_atoms = self.xyz.shape[0]
         return box
 
-    def load_xml_prototype(self, filename, skip_coords=False):
+    def load_xml_prototype(self, filename, skip_coords=False, skip_types=False):
         """Load positions, bonds, masses, etc... from an xml file.
         
         """
@@ -522,8 +522,9 @@ class Gbb():
         self.masses = np.reshape(self.masses, (self.masses.shape[0]))
         if not skip_coords:
             self.xyz = np.asarray(xyz)
+        if not skip_types:
+            self.types = np.asarray(types)
         self.charges = np.reshape(self.charges, (self.charges.shape[0]))
-        self.types = np.asarray(types)
         self.types = np.reshape(self.types, (self.types.shape[0]))
 
         # try bonded interactions

@@ -942,4 +942,37 @@ def write_top(gbb, topfile='system.top'):
         f.write('[ molecules ]\n')
     print "Wrote file '" + topfile + "'"
 
-
+def write_hoomd_xml(system, box, filename='system.xml'):
+    # write header
+    with open(filename, 'w') as f:
+        f.write('<?xml version="1.3" encoding="UTF-8"?>\n')
+        f.write('<hoomd_xml>\n')
+        f.write('<configuration time_step="0">\n')
+        f.write('<box units="sigma"  Lx="%.4f" Ly="%.4f" Lz="%.4f"/>\n' 
+                % (box.lengths[0], box.lengths[1], box.lengths[2]))
+        f.write('<position units="sigma" num="%d">\n' % len(system.xyz))
+        for pos in system.xyz:
+            f.write('%.4f %.4f %.4f\n' % (pos[0], pos[1], pos[2]))
+        f.write('</position>\n')
+        f.write('<type>\n')
+        for t in system.types:
+            f.write('%s\n' % str(int(t)))
+        f.write('</type>\n')
+        f.write('<mass>\n')
+        for m in system.masses:
+            f.write('%.4f\n' % m)
+        f.write('</mass>\n')
+        f.write('<charge>\n')
+        for q in system.charges:
+            f.write('%.4f\n' % q)
+        f.write('</charge>\n')
+        f.write('<bond>\n')
+        for b in system.bonds:
+            f.write('%s %d %d\n' % (str(b[0]), b[1], b[2]))
+        f.write('</bond>\n')
+        f.write('<angle>\n')
+        for a in system.angles:
+            f.write('%s %d %d %d\n' % (str(a[0]), a[1], a[2], a[3]))
+        f.write('</angle>\n')
+        f.write('</configuration>\n')
+        f.write('</hoomd_xml>\n')
