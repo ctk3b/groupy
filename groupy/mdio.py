@@ -125,6 +125,7 @@ def read_lammps_data(data_file, verbose=False):
         Bonds
         Angles
         Dihedrals
+        Impropers
 
     TODO:
         -handling for comments
@@ -142,10 +143,12 @@ def read_lammps_data(data_file, verbose=False):
             'bonds': bonds (numpy.ndarray)
             'angles': angles (numpy.ndarray)
             'dihedrals': dihedrals (numpy.ndarray)
+            'impropers': impropers (numpy.ndarray)
             'pair_types': pair_types (dict)
             'bond_types': bond_types (dict)
             'angle_types': angle_types (dict)
             'dihedral_types': dihedral_type (dict)
+            'improper_types': improper_type (dict)
 
         box (numpy.ndarray): box dimensions
     """
@@ -173,6 +176,8 @@ def read_lammps_data(data_file, verbose=False):
         (?P<n_angles>\s*\d+\s+angles)
         |
         (?P<n_dihedrals>\s*\d+\s+dihedrals)
+        |
+        (?P<n_impropers>\s*\d+\s+impropers)
         |
         (?P<box>.+xlo)
         |
@@ -225,6 +230,10 @@ def read_lammps_data(data_file, verbose=False):
             elif match.group('n_dihedrals'):
                 fields = data_lines.pop(i).split()
                 dihedrals = np.empty(shape=(float(fields[0]), 5), dtype='int')
+
+            elif match.group('n_impropers'):
+                fields = data_lines.pop(i).split()
+                impropers = np.empty(shape=(float(fields[0]), 5), dtype='int')
 
             elif match.group('box'):
                 dims = np.zeros(shape=(3, 2))
@@ -372,7 +381,7 @@ def read_lammps_data(data_file, verbose=False):
 
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = map(int, data_lines.pop(i).split())
-                    dihedrals[fields[0] - 1] = fields[1:]
+                    impropers[fields[0] - 1] = fields[1:]
 
             else:
                 i += 1
@@ -974,5 +983,13 @@ def write_hoomd_xml(system, box, filename='system.xml'):
         for a in system.angles:
             f.write('%s %d %d %d\n' % (str(a[0]), a[1], a[2], a[3]))
         f.write('</angle>\n')
+        f.write('<dihedral>\n')
+        for a in system.dihedrals:
+            f.write('%s %d %d %d %d\n' % (str(a[0]), a[1], a[2], a[3], a[4]))
+        f.write('</dihedral>\n')
+        f.write('<improper>\n')
+        for a in system.impropers:
+            f.write('%s %d %d %d %d\n' % (str(a[0]), a[1], a[2], a[3], a[4]))
+        f.write('</improper>\n')
         f.write('</configuration>\n')
         f.write('</hoomd_xml>\n')
