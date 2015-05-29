@@ -497,7 +497,7 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
                     type_mass[atype] = system.type_mass[atype]
                     print(warn_message)
 
-        elif ff_param_set == 'charmm':
+        elif ff_param_set == 'charmm': # charmm 36, used in Guo et al. JCTC (2013) 
             f.write('20 atom types\n')
             f.write('27 bond types\n')
             f.write('65 angle types\n')
@@ -514,6 +514,40 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
             lazy.append([mN, 12])
             lazy.append([mC, 3, 4, 5, 6, 15, 17])
             lazy.append([mH, 2, 7, 8, 9, 10, 11, 16, 19])
+            for element in lazy:
+                for atype in element[1:]:
+                    type_mass[atype] = element[0]
+
+            # now check that these are the same as in the system gbbs
+            import pdb
+            for atype in system.type_mass.keys():
+                if type_mass[atype] != system.type_mass[atype]:
+                    warn_message = "Warning: atom type %d " % atype
+                    warn_message += "given different masses in prototype "
+                    warn_message += "and %s force field. " % ff_param_set
+                    warn_message += "Using masses given in prototype."
+                    type_mass[atype] = system.type_mass[atype]
+                    print(warn_message)
+
+        elif ff_param_set == 'charmm22':
+            f.write('12 atom types\n')
+            f.write('15 bond types\n')
+            f.write('30 angle types\n')
+            f.write('17 dihedral types\n')
+            f.write('1 improper types\n')
+            mO = 15.9990 # check last digit (4?) might have gotten lost in the reading/writing precision
+            mN = 14.0070 
+            mC = 12.0110 
+            mH = 1.0080
+            mP = 30.9740 
+            mDum = 0.000
+            type_mass = {}
+            lazy = []
+            lazy.append([mO, 2, 8, 9, 11]) 
+            lazy.append([mN, 6])
+            lazy.append([mP, 7])
+            lazy.append([mC, 1, 3, 5, 10])
+            lazy.append([mH, 4, 12]) 
             for element in lazy:
                 for atype in element[1:]:
                     type_mass[atype] = element[0]
