@@ -17,19 +17,32 @@ class Bilayer():
     def __init__(self, lipids, n_x=10, n_y=10, 
                  area_per_lipid=1.0, solvent=None, solvent_per_lipid=None,
                  random_seed=12345,
-                 mirror=True, solvent_density=1.0/1.661):
+                 mirror=True, solvent_density=1.0/1.661,
+                 lipid_positions=None):
         """Constructor. Builds a bilayer with several tunable parameters.
 
-        Args:
-            lipids: list of tuples containing (gbb, fraction)
-            n_x (int): number of lipids in x
-            n_y (int): number of lipids in y
-            area_per_lipid (float): area per lipid, partly determines box size
-            solvent (gbb): used to solvate bilayer
-            solvent_per_lipid (int): molar ration of solvent:lipid
-            random_seed (int): used for the random number generator
-            mirror (bool): whether or not the two layers are mirror images
-            solvent_density (float): mass density of solvent (in units mass/volume)
+        Args
+        ----
+            lipids : list((groupy.gbb, fraction))
+                The lipid prototypes to go into the bilayer
+            n_x : int
+                The number of lipids in x
+            n_y : int
+                The number of lipids in y
+            area_per_lipid : float
+                area per lipid, determines box cross-sectional area
+            solvent : groupy.gbb
+                Solvent molecule
+            solvent_per_lipid : int
+                Number of solvent molecules per lipid
+            random_seed : int
+                Initialize random number generator
+            mirror : bool
+                If True, make the leaflets mirror images
+            solvent_density : float
+                Mass density of solvent to use
+            lipid_positions : list(list(int))
+                Positions of each component, used to phase-separated systems
         """
 
         # set constants from constructor call
@@ -43,6 +56,7 @@ class Bilayer():
         self.n_solvent_per_lipid = solvent_per_lipid
         self.molecules = []
         self.solvent_density = solvent_density
+        self.lipid_positions = lipid_positions
 
         # parse the spacing_z and shift lipids as necessary
         for i, lipid in enumerate(lipids):
@@ -64,24 +78,41 @@ class Bilayer():
 
         # safety checks
         self.check_fractions()
+        if lipid_positions:
+            assert(len(lipids) == len(lipid_positions))
+            for pos in range(n_x * n_y):
+                found = False
+                for comp_pos in lipid_positions:
+                    if pos in comp_pos:
+                        found = True
+                        break
+                if found == False:
+                    print 'Not all lattice positions accounted for'
+                    exit()
 
         # for finding location of water boxes
         self.top_bound = -np.inf
         self.bottom_bound = np.inf
 
         # assemble the lipid layers
-        # TODO(tim): random number seed here?
         seed(self.random_seed)   
-        top_layer, top_lipid_labels = self.create_layer()
+        if lipid_positions:
+            top_layer, new_lipid_labels = self.create_layer(lipid_labels=lipid_positions,
+                random_mixing=False)
+            bottom_layer, bottom_lipid_labels = self.create_layer(
+                lipid_labels=lipid_positions, random_mixing=False, 
+                flip_orientation=True)
+        else: 
+            top_layer, top_lipid_labels = self.create_layer()
+            if self.mirror == True:   # ugly
+                bottom_layer, bottom_lipid_labels = self.create_layer(
+                        lipid_labels=new_lipid_labels,
+                        flip_orientation=True)
+            else:
+                bottom_layer, bottom_lipid_labels = self.create_layer(
+                        flip_orientation=True)
         for lipid in top_layer:
             self.molecules.append(lipid)
-        if self.mirror == True:
-            bottom_layer, bottom_lipid_labels = self.create_layer(
-                    lipid_labels=top_lipid_labels,
-                    flip_orientation=True)
-        else:
-            bottom_layer, bottom_lipid_labels = self.create_layer(
-                    flip_orientation=True)
         for lipid in bottom_layer:
             self.molecules.append(lipid)
         if self.n_solvent_per_lipid > 0:
@@ -96,7 +127,6 @@ class Bilayer():
         assert frac_sum == 1.0, 'Bilayer builder error: Lipid fractions do not add up to 1.'
 
     def n_each_lipid_per_layer(self):
-        import pdb
         if self._n_each_lipid_per_layer:
             return self._n_each_lipid_per_layer
 
@@ -128,10 +158,17 @@ class Bilayer():
         assert len(self._n_each_lipid_per_layer) == len(self.lipids)
         return self._n_each_lipid_per_layer
 
-    def create_layer(self, lipid_labels=None, flip_orientation=False):
+    def create_layer(self, lipid_labels=None, flip_orientation=False, 
+                     random_mixing=True):
         """
-        Args:
-            top (bool): Top (no rotation) or bottom (rotate about x) layer
+        Parameters
+        ----------
+        lipid_labels : list(int)
+            An integer label for each lipid
+        flip_orientation : bool
+            If True, rotate lipids aboux x-axis (to create an opposite layer)
+        random_mixing : bool
+            If True, place the lipids randomly on a lattice
         """
         layer = []
         if not lipid_labels:
@@ -139,20 +176,22 @@ class Bilayer():
             shuffle(lipid_labels)
         lipids_placed = 0
         for i, n_of_lipid_type in enumerate(self.n_each_lipid_per_layer):
+            if self.lipid_positions:
+                assert(len(self.lipid_positions[i]) == n_of_lipid_type)
             current_type = self.lipids[i][0]
-            for n_this_lipid_type in range(n_of_lipid_type):
+            for j, n_this_lipid_type in enumerate(range(n_of_lipid_type)):
                 new_lipid = deepcopy(current_type)
                 if flip_orientation == True:
                     new_lipid.rotate(angles=np.array([np.pi, 0.0, 0.0]))
-                    #new_lipid.translate(-new_lipid.xyz[self.lipids[i][2]])
-                else:
-                    pass
-                    #new_lipid.translate(-new_lipid.xyz[self.lipids[i][2]])
 
                 # Move to point on mask
-                random_index = lipid_labels[lipids_placed]
-                position = self.mask.points[random_index]
-                new_lipid.translate(position)
+                if random_mixing == True:
+                    random_index = lipid_labels[lipids_placed]
+                    position = self.mask.points[random_index]
+                    new_lipid.translate(position)
+                else:
+                    position = self.mask.points[self.lipid_positions[i][j]]
+                    new_lipid.translate(position)
 
                 # see if lipid bounds change
                 if np.amax(new_lipid.xyz[:, 2]) > self.top_bound:
