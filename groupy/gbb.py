@@ -506,7 +506,7 @@ class Gbb():
 
         types = list()
         for t in atom_type.text.splitlines()[1:]:
-            types.append([int(x) for x in t.split()[:1]])
+            types.append([str(x) for x in t.split()[:1]])
 
         # make sure there's the same amount of pos, mass and charges
         warn = 'Different number of positions, masses, types and charges '

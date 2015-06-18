@@ -249,7 +249,7 @@ class System():
             self.n_molecules += 1
             """
 
-    def enumerate_topology(self, destructive=True):
+    def enumerate_topology(self, destructive=True, int_types=False):
         # start from 0?
         if destructive == True:
             self.atom_offset = 0
@@ -281,7 +281,10 @@ class System():
             for mass in gbb.masses:
                 self.masses.append(mass)
             for atype in gbb.types:
-                self.types.append(atype)
+                if not int_types:
+                    self.types.append(atype)
+                else:
+                    self.types.append(int(atype))
             for charge in gbb.charges:
                 self.charges.append(charge)
 
@@ -323,7 +326,7 @@ class System():
         for i, gbb in enumerate(self.gbbs):
             for atom in gbb.xyz:
                 self.resids.append(i+1)
-        self.enumerate_topology(destructive=destructive)
+        self.enumerate_topology(destructive=destructive, int_types=True)
         self.find_number_of_types()
         write_lammpsdata(self, box=self.box, atom_style=atom_style,
                 sys_name=sys_name, filename=filename, ff_param_set=ff_param_set,
@@ -333,8 +336,6 @@ class System():
     def write_lammpstrj(self, step=1, fmt='5col', 
             filename='traj.lammpstrj', mode='a'):
         self.enumerate_topology()
-        import pdb
-        pdb.set_trace()
         write_lammpstrj_frame(np.asarray(self.xyz), np.asarray(self.types),
                 step=1, box=self.box, fmt=fmt, filename=filename, mode=mode)
 
@@ -424,3 +425,7 @@ class System():
             n_mol = t_system_info[comp][0]
             n_apm = t_system_info[comp][1]
             self.system_info.append([n_mol, n_apm, comp])
+
+    def write_hoomd_xml(self, filename='start.xml'):
+        self.enumerate_topology()
+        write_hoomd_xml(self, self.box, filename=filename)

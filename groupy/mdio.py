@@ -520,6 +520,38 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
                     type_mass[atype] = system.type_mass[atype]
                     print(warn_message)
 
+        elif ff_param_set == 'charmm-ti':
+            f.write('32 atom types\n')
+            f.write('27 bond types\n')
+            f.write('65 angle types\n')
+            f.write('68 dihedral types\n')
+            f.write('15 improper types\n')
+            mO = 15.9994
+            mN = 14.0070
+            mC = 12.0110
+            mH = 1.0080
+            mDum = 0.000
+            type_mass = {}
+            lazy = []
+            lazy.append([mO, 1, 13, 14, 18, 20])
+            lazy.append([mN, 12])
+            lazy.append([mC, 3, 4, 5, 6, 15, 17, 21, 22, 25, 27, 28, 31])
+            lazy.append([mH, 2, 7, 8, 9, 10, 11, 16, 19, 23, 24, 26, 29, 30, 32])
+            for element in lazy:
+                for atype in element[1:]:
+                    type_mass[atype] = element[0]
+
+            # now check that these are the same as in the system gbbs
+            import pdb
+            for atype in system.type_mass.keys():
+                if type_mass[atype] != system.type_mass[atype]:
+                    warn_message = "Warning: atom type %d " % atype
+                    warn_message += "given different masses in prototype "
+                    warn_message += "and %s force field. " % ff_param_set
+                    warn_message += "Using masses given in prototype."
+                    type_mass[atype] = system.type_mass[atype]
+                    print(warn_message)
+
         else:
             f.write('%d atom types\n' % max(system.unique_atom_types))
             if len(system.unique_bond_types) > 0:
@@ -956,7 +988,7 @@ def write_hoomd_xml(system, box, filename='system.xml'):
         f.write('</position>\n')
         f.write('<type>\n')
         for t in system.types:
-            f.write('%s\n' % str(int(t)))
+            f.write('%s\n' % str(t))
         f.write('</type>\n')
         f.write('<mass>\n')
         for m in system.masses:
