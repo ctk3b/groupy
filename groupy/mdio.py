@@ -125,6 +125,7 @@ def read_lammps_data(data_file, verbose=False):
         Bonds
         Angles
         Dihedrals
+        Impropers
 
     TODO:
         -handling for comments
@@ -142,10 +143,12 @@ def read_lammps_data(data_file, verbose=False):
             'bonds': bonds (numpy.ndarray)
             'angles': angles (numpy.ndarray)
             'dihedrals': dihedrals (numpy.ndarray)
+            'impropers': impropers (numpy.ndarray)
             'pair_types': pair_types (dict)
             'bond_types': bond_types (dict)
             'angle_types': angle_types (dict)
             'dihedral_types': dihedral_type (dict)
+            'improper_types': improper_type (dict)
 
         box (numpy.ndarray): box dimensions
     """
@@ -173,6 +176,8 @@ def read_lammps_data(data_file, verbose=False):
         (?P<n_angles>\s*\d+\s+angles)
         |
         (?P<n_dihedrals>\s*\d+\s+dihedrals)
+        |
+        (?P<n_impropers>\s*\d+\s+impropers)
         |
         (?P<box>.+xlo)
         |
@@ -225,6 +230,10 @@ def read_lammps_data(data_file, verbose=False):
             elif match.group('n_dihedrals'):
                 fields = data_lines.pop(i).split()
                 dihedrals = np.empty(shape=(float(fields[0]), 5), dtype='int')
+
+            elif match.group('n_impropers'):
+                fields = data_lines.pop(i).split()
+                impropers = np.empty(shape=(float(fields[0]), 5), dtype='int')
 
             elif match.group('box'):
                 dims = np.zeros(shape=(3, 2))
@@ -372,7 +381,7 @@ def read_lammps_data(data_file, verbose=False):
 
                 while i < len(data_lines) and data_lines[i].strip():
                     fields = map(int, data_lines.pop(i).split())
-                    dihedrals[fields[0] - 1] = fields[1:]
+                    impropers[fields[0] - 1] = fields[1:]
 
             else:
                 i += 1
@@ -488,7 +497,7 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
                     type_mass[atype] = system.type_mass[atype]
                     print(warn_message)
 
-        elif ff_param_set == 'charmm':
+        elif ff_param_set == 'charmm': # charmm 36, used in Guo et al. JCTC (2013) 
             f.write('20 atom types\n')
             f.write('27 bond types\n')
             f.write('65 angle types\n')
@@ -537,6 +546,27 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
             lazy.append([mN, 12])
             lazy.append([mC, 3, 4, 5, 6, 15, 17, 21, 22, 25, 27, 28, 31])
             lazy.append([mH, 2, 7, 8, 9, 10, 11, 16, 19, 23, 24, 26, 29, 30, 32])
+
+        elif ff_param_set == 'charmm22':
+            f.write('12 atom types\n')
+            f.write('15 bond types\n')
+            f.write('30 angle types\n')
+            f.write('17 dihedral types\n')
+            f.write('1 improper types\n')
+            mO = 15.9990 # check last digit (4?) might have gotten lost in the reading/writing precision
+            mN = 14.0070 
+            mC = 12.0110 
+            mH = 1.0080
+            mP = 30.9740 
+            mDum = 0.000
+            type_mass = {}
+            lazy = []
+            lazy.append([mO, 2, 8, 9, 11]) 
+            lazy.append([mN, 6])
+            lazy.append([mP, 7])
+            lazy.append([mC, 1, 3, 5, 10])
+            lazy.append([mH, 4, 12]) 
+
             for element in lazy:
                 for atype in element[1:]:
                     type_mass[atype] = element[0]
@@ -1006,5 +1036,13 @@ def write_hoomd_xml(system, box, filename='system.xml'):
         for a in system.angles:
             f.write('%s %d %d %d\n' % (str(a[0]), a[1], a[2], a[3]))
         f.write('</angle>\n')
+        f.write('<dihedral>\n')
+        for a in system.dihedrals:
+            f.write('%s %d %d %d %d\n' % (str(a[0]), a[1], a[2], a[3], a[4]))
+        f.write('</dihedral>\n')
+        f.write('<improper>\n')
+        for a in system.impropers:
+            f.write('%s %d %d %d %d\n' % (str(a[0]), a[1], a[2], a[3], a[4]))
+        f.write('</improper>\n')
         f.write('</configuration>\n')
         f.write('</hoomd_xml>\n')

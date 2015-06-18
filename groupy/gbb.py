@@ -1,4 +1,5 @@
 import copy
+import math
 
 import numpy as np
 
@@ -288,17 +289,16 @@ class Gbb():
                         box_length = box.lengths[k]
                         self.xyz[i, k] -= box_length * anint(dr / box_length)
 
-    def wrap(self, box, dim=[True, True, True]):
-        """Wrap coordinates for PBC.
-        """
-
+    def wrap(self, box):
+        """Wrap coordinates into box"""
         for i, coords in enumerate(self.xyz):
-            for k, c in enumerate(coords):  # TODO: vectorize
-                if dim[k] == True:
-                    if c < box.dims[k, 0]:
-                        self.xyz[i, k] = box.dims[k, 1] - abs(box.dims[k, 0] - c)
-                    elif c > box.dims[k, 1]:
-                        self.xyz[i, k] = box.dims[k, 0] + abs(c - box.dims[k, 1])
+            for k, c in enumerate(coords):
+                if c < box.mins[k]:
+                    n = math.floor((box.mins[k] - c)/box.period[k]) + 1
+                    self.xyz[i, k] += box.lenghts[k] * n
+                elif c > box.maxs[k]:
+                    n = math.floor((c - box.maxs[k])/box.period[k]) + 1
+                    self.xyz[i, k] -= box.lenghts[k] * n
 
     def wrap_com(self, box):
         """Wrap the molecule so that the center of mass is in the box, but the molecule is not broken.
