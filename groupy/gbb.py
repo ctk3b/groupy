@@ -310,10 +310,10 @@ class Gbb():
         for i, coords in enumerate(self.xyz):
             for k, c in enumerate(coords):
                 if c < box.mins[k]:
-                    n = math.floor((box.mins[k] - c)/box.period[k]) + 1
+                    n = math.floor((box.mins[k] - c)/box.lengths[k]) + 1
                     self.xyz[i, k] += box.lenghts[k] * n
                 elif c > box.maxs[k]:
-                    n = math.floor((c - box.maxs[k])/box.period[k]) + 1
+                    n = math.floor((c - box.maxs[k])/box.lengths[k]) + 1
                     self.xyz[i, k] -= box.lenghts[k] * n
 
     def wrap_com(self, box):
