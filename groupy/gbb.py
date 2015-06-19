@@ -13,10 +13,12 @@ class Gbb():
     def __init__(self, xml_prototype=None, name=None):
         """Constructor.
 
-        Args:
-            xml_prototype (str): filename of xml prototype to read
-            name (str): name of gbb (e.g., 'water')
-
+        Parameters
+        ----------
+        xml_prototype : (str)
+            filename of xml prototype to read
+        name : (str)
+            name of gbb (e.g., 'water')
         """
         if name:
             self.name = name
