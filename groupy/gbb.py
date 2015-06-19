@@ -244,9 +244,20 @@ class Gbb():
         """
         self.translate(-self.xyz[atom])
 
-    def rotate(self, angles=[0.0, 0.0, 0.0]):
+    def rotate(self, angles=[0.0, 0.0, 0.0], fixed_atom=None):
         """Rotate around given axes by given angles
+
+        Parameters
+        ----------
+        angles : list(float)
+            Rotate about x y and z axes
+        fixed_atom : int
+            Rotate about this atom (i.e., this atom remains fixed)
         """
+        if fixed_atom:
+            amount_to_move = -self.xyz[fixed_atom]
+            self.translate(amount_to_move)
+
         if angles[0] != 0.0:
             theta = angles[0]
             T = np.eye(3)
@@ -271,6 +282,9 @@ class Gbb():
             T[1, 0] = np.sin(theta)
             T[1, 1] = np.cos(theta)
             self.xyz = np.dot(self.xyz, T.T)
+
+        if fixed_atom:
+            self.translate(-amount_to_move)
 
     def scale():
         pass
