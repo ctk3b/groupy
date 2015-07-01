@@ -7,13 +7,15 @@ import numpy as np
 from box import Box
 
 
-def read_frame_lammpstrj(trj, read_velocities=False):
+def read_frame_lammpstrj(trj, read_velocities=False, read_zforces=False, idmin=0):
     """Load a frame from a LAMMPS dump file.
 
     Args:
         trj (file): LAMMPS dump file of format 'ID type x y z' or
-                                               'ID type x y z vx vy vz'
+                                               'ID type x y z vx vy vz' or
+                                               'ID type x y z fz'
         read_velocities (bool): if True, reads velocity data from file
+        read_zforces (bool): if True, reads zforces data from file
 
     Returns:
         xyz (numpy.ndarray):
@@ -21,6 +23,7 @@ def read_frame_lammpstrj(trj, read_velocities=False):
         step (int):
         box (groupy Box object):
         vxyz (numpy.ndarray):
+        fz (numpy.ndarray):
     """
     box_dims = np.empty(shape=(3, 2))
 
@@ -36,28 +39,38 @@ def read_frame_lammpstrj(trj, read_velocities=False):
     box = Box(mins=box_dims[:, 0], maxs=box_dims[:, 1])
     trj.readline()  # text
     # --- end header ---
-
+    
     xyz = np.empty(shape=(n_atoms, 3))
     xyz[:] = np.NAN
     types = np.empty(shape=(n_atoms), dtype='int')
     if read_velocities:
         vxyz = np.empty(shape=(n_atoms, 3))
         vxyz[:] = np.NAN
+    if read_zforces:
+        fz = np.empty(shape=(n_atoms), dtype='float')
+        fz[:] = np.NAN
 
     # --- begin body ---
     for i in range(n_atoms):
         temp = trj.readline().split()
-        a_ID = int(temp[0])  # atom ID
+        a_ID = int(temp[0])-idmin  # atom ID
         types[a_ID - 1] = int(temp[1])  # atom type
         xyz[a_ID - 1] = map(float, temp[2:5])  # coordinates
         if read_velocities:
             vxyz[a_ID - 1] = map(float, temp[5:8])  # velocities
+        elif read_zforces:
+            fz[a_ID - 1] = float(temp[5]) #map(float, temp[5]) # z-forces
+
+
     # --- end body ---
 
     if read_velocities:
         return xyz, types, step, box, vxyz
+    elif read_zforces:
+        return xyz, types, step, box, fz
     else:
         return xyz, types, step, box
+
 
 def read_xyz(file_name):
     """Load an xyz file into a coordinate and a type array."""
