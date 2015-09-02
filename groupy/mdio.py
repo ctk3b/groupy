@@ -1,10 +1,12 @@
+from __future__ import print_function
+
 import warnings
 import re
 import pdb
 
 import numpy as np
 
-from box import Box
+from groupy.box import Box
 
 
 def read_frame_lammpstrj(trj, read_velocities=False, read_zforces=False, idmin=0):
@@ -55,9 +57,9 @@ def read_frame_lammpstrj(trj, read_velocities=False, read_zforces=False, idmin=0
         temp = trj.readline().split()
         a_ID = int(temp[0])-idmin  # atom ID
         types[a_ID - 1] = int(temp[1])  # atom type
-        xyz[a_ID - 1] = map(float, temp[2:5])  # coordinates
+        xyz[a_ID - 1] = [float(x) for x in temp[2:5]]  # coordinates
         if read_velocities:
-            vxyz[a_ID - 1] = map(float, temp[5:8])  # velocities
+            vxyz[a_ID - 1] = [float(x) for x in temp[5:8]]  # velocities
         elif read_zforces:
             fz[a_ID - 1] = float(temp[5]) #map(float, temp[5]) # z-forces
 
@@ -84,7 +86,7 @@ def read_xyz(file_name):
         for i in range(n_atoms):
             temp = f.readline().split()
             types[i] = temp[0]  # atom type
-            xyz[i] = map(float, temp[1:4])  # coordinates
+            xyz[i] = [float(x) for x in temp[1:4]]  # coordinates
         return xyz, types
 
 
@@ -101,7 +103,7 @@ def write_xyz(xyz, types, file_name, comment=''):
             #        type   x     y     z
             f.write('%s %8.3f %8.3f %8.3f\n' %
                     (atom, xyz[i, 0], xyz[i, 1], xyz[i, 2]))
-    print "Wrote file '" + file_name + "'"
+    print("Wrote file '" + file_name + "'")
 
 def write_lammpstrj_frame(xyz, types, step=1, box=Box(None), fmt='5col',
         filename='traj.lammpstrj', mode='a'):
@@ -176,7 +178,7 @@ def read_lammps_data(data_file, verbose=False):
     dihedral_types = dict()
     improper_types = dict()
 
-    print "Reading '" + data_file + "'"
+    print("Reading '" + data_file + "'")
     with open(data_file, 'r') as f:
         data_lines = f.readlines()
 
@@ -251,14 +253,14 @@ def read_lammps_data(data_file, verbose=False):
             elif match.group('box'):
                 dims = np.zeros(shape=(3, 2))
                 for j in range(3):
-                    fields = map(float, data_lines.pop(i).split()[:2])
+                    fields = [float(x) for x in data_lines.pop(i).split()[:2]]
                     dims[j, 0] = fields[0]
                     dims[j, 1] = fields[1]
                 box = Box(dims[:, 1], dims[:, 0])
 
             elif match.group('Masses'):
                 if verbose:
-                    print 'Parsing Masses...'
+                    print('Parsing Masses...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -270,7 +272,7 @@ def read_lammps_data(data_file, verbose=False):
 
             elif match.group('Atoms'):
                 if verbose:
-                    print 'Parsing Atoms...'
+                    print('Parsing Atoms...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -308,7 +310,7 @@ def read_lammps_data(data_file, verbose=False):
 
             elif match.group('PairCoeffs'):
                 if verbose:
-                    print 'Parsing Pair Coeffs...'
+                    print('Parsing Pair Coeffs...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -318,37 +320,37 @@ def read_lammps_data(data_file, verbose=False):
                                                   float(fields[2]))
             elif match.group('BondCoeffs'):
                 if verbose:
-                    print 'Parsing Bond Coeffs...'
+                    print('Parsing Bond Coeffs...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
                 while i < len(data_lines) and data_lines[i].strip():
-                    fields = map(float, data_lines.pop(i).split())
+                    fields = [float(x) for x in  data_lines.pop(i).split()]
                     bond_types[int(fields[0])] = fields[1:]
 
             elif match.group('AngleCoeffs'):
                 if verbose:
-                    print 'Parsing Angle Coeffs...'
+                    print('Parsing Angle Coeffs...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
                 while i < len(data_lines) and data_lines[i].strip():
-                    fields = map(float, data_lines.pop(i).split())
+                    fields = [float(x) for x in data_lines.pop(i).split()]
                     angle_types[int(fields[0])] = fields[1:]
 
             elif match.group('DihedralCoeffs'):
                 if verbose:
-                    print 'Parsing Dihedral Coeffs...'
+                    print('Parsing Dihedral Coeffs...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
                 while i < len(data_lines) and data_lines[i].strip():
-                    fields = map(float, data_lines.pop(i).split())
+                    fields = [float(x) for x in data_lines.pop(i).split()]
                     dihedral_types[int(fields[0])] = fields[1:]
 
             elif match.group('ImproperCoeffs'):
                 if verbose:
-                    print 'Parsing Improper Coeffs...'
+                    print('Parsing Improper Coeffs...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -358,7 +360,7 @@ def read_lammps_data(data_file, verbose=False):
 
             elif match.group('Bonds'):
                 if verbose:
-                    print 'Parsing Bonds...'
+                    print('Parsing Bonds...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -368,7 +370,7 @@ def read_lammps_data(data_file, verbose=False):
 
             elif match.group('Angles'):
                 if verbose:
-                    print 'Parsing Angles...'
+                    print('Parsing Angles...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -378,7 +380,7 @@ def read_lammps_data(data_file, verbose=False):
 
             elif match.group('Dihedrals'):
                 if verbose:
-                    print 'Parsing Dihedrals...'
+                    print('Parsing Dihedrals...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -388,7 +390,7 @@ def read_lammps_data(data_file, verbose=False):
 
             elif match.group('Impropers'):
                 if verbose:
-                    print 'Parsing Impropers...'
+                    print('Parsing Impropers...')
                 data_lines.pop(i)
                 data_lines.pop(i)
 
@@ -894,7 +896,7 @@ def write_lammps_data(gbb, box=None, file_name='data.system',
             if prototype:
                 f_dihedral.close()
 
-    print "Wrote file '" + file_name + "'"
+    print("Wrote file '" + file_name + "'")
 
 def read_gro(file_name):
     """
@@ -935,7 +937,7 @@ def read_gro(file_name):
             box[1, 1] = line[1]
             box[2, 1] = line[2]
 
-    print "Read file '" + file_name + "'"
+    print("Read file '" + file_name + "'")
     return resids, resnames, types, xyz, vel, box
 
 
@@ -969,7 +971,7 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
                %(box[0, 1],
                  box[1, 1],
                  box[2, 1]))
-    print "Wrote file '" + grofile + "'"
+    print("Wrote file '" + grofile + "'")
 
 
 def write_top(gbb, topfile='system.top'):
@@ -1015,7 +1017,7 @@ def write_top(gbb, topfile='system.top'):
 
         # molecules
         f.write('[ molecules ]\n')
-    print "Wrote file '" + topfile + "'"
+    print("Wrote file '" + topfile + "'")
 
 def write_hoomd_xml(system, box, filename='system.xml'):
     # write header

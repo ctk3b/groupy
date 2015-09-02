@@ -3,8 +3,8 @@ import math
 
 import numpy as np
 
-from mdio import read_gro, read_xyz, read_lammps_data
-from general import anint
+from groupy.mdio import read_gro, read_xyz, read_lammps_data
+from groupy.general import anint
 
 
 class Gbb():

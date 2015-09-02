@@ -1,12 +1,14 @@
+from __future__ import print_function
+
 import collections
 from copy import deepcopy
 
 import numpy as np
 from scipy.spatial import cKDTree
 
-from box import *
-from gbb import Gbb
-from mdio import *
+from groupy.box import *
+from groupy.gbb import Gbb
+from groupy.mdio import *
 
 
 class System():
@@ -381,7 +383,7 @@ class System():
         if len(self.sorted_gbbs) == len(self.gbbs):
             self.gbbs = self.sorted_gbbs
         else: 
-            print "Warning: Not all molecules in sorted list, aborting sorting."
+            print("Warning: Not all molecules in sorted list, aborting sorting.")
 
     def convert_from_traj(self, xyz, types, clear=True):
         """Convert a list of coordinates into a list of gbbs

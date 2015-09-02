@@ -1,4 +1,5 @@
 """General, handy functions."""
+from __future__ import print_function
 
 import pdb
 import math
@@ -74,7 +75,7 @@ def add_to_box(gbb, gbb_list, n, box, dims=[True, True, True], r_cut=2.0, name='
             added.append(t_gbb)
             # brief update message every 10th of the way there
             if len(added) % (n/10) == 0:
-                print "Added {0} #{1}".format(name, len(added))
+                print("Added {0} #{1}".format(name, len(added)))
     return added
 
 # spatial search

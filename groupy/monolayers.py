@@ -9,8 +9,8 @@ import scipy.stats
 import scipy.integrate
 from scitools.numpyutils import meshgrid
 
-from mdio import read_frame_lammpstrj
-from general import find_nearest
+from groupy.mdio import read_frame_lammpstrj
+from groupy.general import find_nearest
 
 
 def calc_vel_profile(file_name, system_info):

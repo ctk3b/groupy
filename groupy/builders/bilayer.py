@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 from copy import deepcopy
 from random import seed, randint, shuffle
 
@@ -87,7 +89,7 @@ class Bilayer():
                         found = True
                         break
                 if found == False:
-                    print 'Not all lattice positions accounted for'
+                    print('Not all lattice positions accounted for')
                     exit()
 
         # for finding location of water boxes
