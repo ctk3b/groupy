@@ -543,6 +543,16 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
                     warn_message += "Using masses given in prototype."
                     type_mass[atype] = system.type_mass[atype]
                     print(warn_message)
+        
+        elif ff_param_set == 'manual':
+            f.write(str(len(system.type_mass))+' atom types\n')
+            f.write('1 bond types\n') # assume at least one type for water, rest needs to be added manually 
+            f.write('1 angle types\n')
+            f.write('0 dihedral types\n')
+            f.write('0 improper types\n')
+            type_mass = {}
+            for atype in system.type_mass.keys():
+                type_mass[atype] = system.type_mass[atype]
 
         elif ff_param_set == 'charmm-ti':
             f.write('32 atom types\n')
