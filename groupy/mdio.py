@@ -554,7 +554,7 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
             for atype in system.type_mass.keys():
                 type_mass[atype] = system.type_mass[atype]
 
-        elif ff_param_set == 'IL':
+        elif ff_param_set == 'IL': # Lopes and Padua, for bmim-ntf2
             f.write('16 atom types\n')
             f.write('12 bond types\n')
             f.write('19 angle types\n')
@@ -668,15 +668,16 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
             f.write('# %d total atoms\n\n' % system.n_atoms())
 
         # write masses for each type
-        #f.write('Masses')
-        #f.write('\n')
-        #f.write('\n')
-        #for i in range(1, max(type_mass.keys())+1):
-        #    if type_mass[i]:
-        #        f.write('%d %.4f\n'  % (i, 
-        #            type_mass[i]))
-        #    else:
-        #        f.write('%d 999.0   # dummy, this type not in this system\n' % i)
+        if ff_param_set!='IL':
+            f.write('Masses')
+            f.write('\n')
+            f.write('\n')
+            for i in range(1, max(type_mass.keys())+1):
+                if type_mass[i]:
+                    f.write('%d %.4f\n'  % (i, 
+                        type_mass[i]))
+                else:
+                    f.write('%d 999.0   # dummy, this type not in this system\n' % i)
         f.write('\n')
 
         # atoms
