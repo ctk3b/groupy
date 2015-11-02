@@ -554,6 +554,29 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
             for atype in system.type_mass.keys():
                 type_mass[atype] = system.type_mass[atype]
 
+        elif ff_param_set == 'IL':
+            f.write('16 atom types\n')
+            f.write('12 bond types\n')
+            f.write('19 angle types\n')
+            f.write('13 dihedral types\n')
+            f.write('0 improper types\n')
+            mO = 15.9994
+            mN = 14.0070
+            mC = 12.0110
+            mH = 1.0080
+            mCu = 63.5460
+            mX1 = 32.065
+            mX2 = 18.9984032
+            type_mass = {}
+            lazy = []
+            lazy.append([mO, 12, 14])
+            lazy.append([mN, 1])
+            lazy.append([mC, 2, 3, 4, 5, 6, 7])
+            lazy.append([mH, 8, 9, 10, 15])
+            lazy.append([mCu, 16])
+            lazy.append([mX1, 11])
+            lazy.append([mX2, 13])
+        
         elif ff_param_set == 'charmm-ti':
             f.write('32 atom types\n')
             f.write('27 bond types\n')
@@ -645,15 +668,15 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
             f.write('# %d total atoms\n\n' % system.n_atoms())
 
         # write masses for each type
-        f.write('Masses')
-        f.write('\n')
-        f.write('\n')
-        for i in range(1, max(type_mass.keys())+1):
-            if type_mass[i]:
-                f.write('%d %.4f\n'  % (i, 
-                    type_mass[i]))
-            else:
-                f.write('%d 999.0   # dummy, this type not in this system\n' % i)
+        #f.write('Masses')
+        #f.write('\n')
+        #f.write('\n')
+        #for i in range(1, max(type_mass.keys())+1):
+        #    if type_mass[i]:
+        #        f.write('%d %.4f\n'  % (i, 
+        #            type_mass[i]))
+        #    else:
+        #        f.write('%d 999.0   # dummy, this type not in this system\n' % i)
         f.write('\n')
 
         # atoms
