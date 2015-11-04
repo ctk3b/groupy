@@ -544,10 +544,10 @@ def write_lammpsdata(system, box, filename='groupy.lammpsdata',
                     type_mass[atype] = system.type_mass[atype]
                     print(warn_message)
         
-        elif ff_param_set == 'manual':
+        elif ff_param_set == 'manual' or ff_param_set == 'LJ':
             f.write(str(len(system.type_mass))+' atom types\n')
-            f.write('1 bond types\n') # assume at least one type for water, rest needs to be added manually 
-            f.write('1 angle types\n') # idem
+            f.write('0 bond types\n') # assume at least one type for water, rest needs to be added manually 
+            f.write('0 angle types\n') # idem
             f.write('0 dihedral types\n')
             f.write('0 improper types\n')
             type_mass = {}
