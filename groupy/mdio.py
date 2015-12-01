@@ -965,7 +965,7 @@ def read_gro(file_name):
                 vel[i, 2] = 0.0
 
         box = np.zeros(shape=(3, 2))
-        line = map(float, f.readline().split())
+        line = list(map(float, f.readline().split()))
         if len(line) == 3:
             box[0, 1] = line[0]
             box[1, 1] = line[1]
@@ -992,8 +992,8 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
         for i, coord in enumerate(gbb.xyz):
             f.write('%5d%-4s%6s%5d%8.3f%8.3f%8.3f%8.3f%8.3f%8.3f\n'
                       %(gbb.resids[i],
-                        gbb.resnames[i],
-                        gbb.types[i],
+                        gbb.resnames[i].decode(),
+                        gbb.types[i].decode(),
                         i+1,
                         coord[0],
                         coord[1],
