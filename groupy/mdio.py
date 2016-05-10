@@ -1007,6 +1007,30 @@ def write_gro(gbb, box, grofile='system.gro', sys_name='system'):
                  box[2, 1]))
     print("Wrote file '" + grofile + "'")
 
+def write_pdb(gbb, box, pdbfile='system.pdb', sys_name='system'):
+    """Write gbb to PDB .pdb file
+
+    Args:
+        pdbfile (str): name of .pdb file
+    """
+    with open(pdbfile, 'w') as f:
+        f.write('CRYST1%9.3f%9.3f%9.3f%7.2f%7.2f%7.2f P 1         1\n'
+            %(box[0, 1]*10, box[1, 1]*10, box[2, 1]*10,
+              box[0, 0], box[1, 0], box[2, 0]))
+        for i, coord in enumerate(gbb.xyz):
+            f.write('ATOM  %5d%4s %4s %4d    %8.3f%8.3f%8.3f%6.2f%6.2f    %2s\n'
+                %(float(i+1),
+                gbb.types[i].decode(),            
+                gbb.resnames[i].decode(),
+                float(gbb.resids[i]),
+                coord[0]*10,
+                coord[1]*10,
+                coord[2]*10,
+                0.0,
+                0.0,
+                0))
+        f.write('END') 
+    print("Wrote file '" + pdbfile + "'")
 
 def write_top(gbb, topfile='system.top'):
     """Write forcefield information to GROMACS .top file
